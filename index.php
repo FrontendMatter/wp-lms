@@ -9,23 +9,26 @@ Author: MosaicPro
 Author URI: http://mosaicpro.biz
 */
 
+// If this file is called directly, exit.
+if ( ! defined( 'WPINC' ) ) { die; }
+
 use Mosaicpro\Core\IoC;
 use Mosaicpro\WpCore\Plugin;
 
-// Initialize the plugin
-add_action('init', function()
-{
-    $libraries = [
-        'LMS',
-        'Courses',
-        'Lessons',
-        'Prerequisites',
-        'Quizez',
-        'QuizUnits',
-        'QuizAnswers',
-        'Settings'
-    ];
+// Define Plugin libraries
+$libraries = [
+    'LMS',
+    'Courses',
+    'Lessons',
+    'Prerequisites',
+    'Quizez',
+    'QuizUnits',
+    'QuizAnswers',
+    'Settings'
+];
 
+add_action('plugins_loaded', function() use ($libraries)
+{
     // Get the Container from IoC
     $app = IoC::getContainer();
 
@@ -39,10 +42,19 @@ add_action('init', function()
     foreach ($libraries as $library)
     {
         require_once 'library/' . $library . '.php';
-        forward_static_call_array([__NAMESPACE__ . '\\' . $library, 'init'], []);
+        forward_static_call_array([ __NAMESPACE__ . '\\' . $library, 'init' ], []);
     }
-},
-100);
+});
 
 // Plugin activation
-register_activation_hook(__FILE__, [__NAMESPACE__ . '\LMS', 'activate']);
+register_activation_hook(__FILE__, function() use ($libraries)
+{
+    // Let the Plugin components know they are being executed in the Plugin activation hook
+    defined('MP_PLUGIN_ACTIVATING') || define('MP_PLUGIN_ACTIVATING', true);
+
+    foreach ($libraries as $library)
+    {
+        require 'library/' . $library . '.php';
+        forward_static_call_array([ __NAMESPACE__ . '\\' . $library, 'activate' ], []);
+    }
+});

@@ -7,8 +7,15 @@ use Mosaicpro\WpCore\PluginGeneric;
 use Mosaicpro\WpCore\ThickBox;
 use Mosaicpro\WpCore\Utility;
 
+/**
+ * Class Prerequisites
+ * @package Mosaicpro\WP\Plugins\LMS
+ */
 class Prerequisites extends PluginGeneric
 {
+    /**
+     * Create a new Prerequisites instance
+     */
     public function __construct()
     {
         parent::__construct();
@@ -16,6 +23,9 @@ class Prerequisites extends PluginGeneric
         $this->metaboxes();
     }
 
+    /**
+     * Create CRUD Relationships
+     */
     private function crud()
     {
         // Courses -> Prerequisites CRUD Relationship
@@ -50,6 +60,9 @@ class Prerequisites extends PluginGeneric
         CRUD::setPostTypeLabel('mp_lms_prerequisite', 'Prerequisite');
     }
 
+    /**
+     * Create the Meta Boxes
+     */
     private function metaboxes()
     {
         // Course -> Prerequisites Meta Box
@@ -66,6 +79,10 @@ class Prerequisites extends PluginGeneric
             ->register();
     }
 
+    /**
+     * Get the CRUD form content
+     * @param $post
+     */
     private function getForm($post)
     {
         if (empty($post)) $post = new \stdClass();
@@ -92,6 +109,11 @@ class Prerequisites extends PluginGeneric
         }
     }
 
+    /**
+     * Validate the CRUD form data
+     * @param $instance
+     * @return bool
+     */
     private function validateForm($instance)
     {
         $meta = $_POST['meta'];

@@ -5,23 +5,51 @@ use Mosaicpro\WpCore\FormBuilder;
 use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;
 use Mosaicpro\WpCore\PostList;
+use Mosaicpro\WpCore\Taxonomy;
 use Mosaicpro\WpCore\ThickBox;
 use Mosaicpro\WpCore\Utility;
 
+/**
+ * Class QuizUnits
+ * @package Mosaicpro\WP\Plugins\LMS
+ */
 class QuizUnits extends PluginGeneric
 {
+    /**
+     * Create a new QuizUnits instance
+     */
     public function __construct()
     {
         parent::__construct();
+        $this->taxonomies();
         $this->metaboxes();
         $this->crud();
         $this->admin_post_list();
     }
 
+    /**
+     * Create Taxonomies
+     */
+    public static function taxonomies()
+    {
+        Taxonomy::make('quiz unit type')
+            ->setType('radio')
+            ->setPostType('mp_lms_quiz_unit')
+            ->setOption('update_meta_box', [
+                'label' => 'Quiz Unit Type',
+                'context' => 'normal',
+                'priority' => 'high'
+            ])
+            ->register();
+    }
+
+    /**
+     * Create Meta Boxes
+     */
     private function metaboxes()
     {
         // Quiz Units -> Multiple Choice -> Quiz Answers Meta Box
-        MetaBox::make($this->prefix, 'quiz_answer', 'Multiple Choice Answers')
+        MetaBox::make($this->prefix, 'quiz_answer_multiple_choice', 'Multiple Choice Answers')
             ->setPostType('quiz_unit')
             ->setDisplay([
                 '<div id="' . $this->prefix . '_quiz_answer_list"></div>',
@@ -31,13 +59,13 @@ class QuizUnits extends PluginGeneric
             ->register();
 
         // Quiz Units -> True or False -> Correct Answer Meta Box
-        MetaBox::make($this->prefix, 'correct_answer_true_false', 'True of False Answer')
+        MetaBox::make($this->prefix, 'quiz_answer_true_false', 'True of False Answer')
             ->setPostType('quiz_unit')
             ->setField('correct_answer_true_false', 'Select the correct answer', ['true', 'false'], 'radio')
             ->register();
 
         // Quiz Units -> One Word -> Correct Answer Meta Box
-        MetaBox::make($this->prefix, 'correct_answer_one_word', 'One Word Correct Answer')
+        MetaBox::make($this->prefix, 'quiz_answer_one_word', 'One Word Correct Answer')
             ->setPostType('quiz_unit')
             ->setField('correct_answer_one_word', 'Provide the correct answer', 'input')
             ->setDisplay([
@@ -46,31 +74,22 @@ class QuizUnits extends PluginGeneric
             ])
             ->register();
 
-        // Only show the Multiple Choice Quiz Answers Meta Box if the Quiz Unit Type is multiple_choice
-        Utility::show_hide([
-                'when' => '#quiz_unit_typechecklist',
-                'is_value' => 'multiple_choice',
-                'show_target' => '#mp_lms_quiz_answer'
-            ],['mp_lms_quiz_unit']
-        );
-
-        // Only show the True or False Correct Answer Meta Box if the Quiz Unit Type is true_false
-        Utility::show_hide([
-                'when' => '#quiz_unit_typechecklist',
-                'is_value' => 'true_false',
-                'show_target' => '#mp_lms_correct_answer_true_false'
-            ],['mp_lms_quiz_unit']
-        );
-
-        // Only show the One Word Correct Answer Meta Box if the Quiz Unit Type is one_word
-        Utility::show_hide([
-                'when' => '#quiz_unit_typechecklist',
-                'is_value' => 'one_word',
-                'show_target' => '#mp_lms_correct_answer_one_word'
-            ],['mp_lms_quiz_unit']
-        );
+        $types = ['multiple_choice', 'true_false', 'one_word'];
+        foreach($types as $type)
+        {
+            // Only show the $type Meta Box if the Quiz Unit Type is $type
+            Utility::show_hide([
+                    'when' => '#quiz_unit_typechecklist',
+                    'is_value' => $type,
+                    'show_target' => '#mp_lms_quiz_answer_' . $type
+                ],['mp_lms_quiz_unit']
+            );
+        }
     }
 
+    /**
+     * Create CRUD Relationships
+     */
     private function crud()
     {
         // Quiz Units -> Quiz Answers CRUD Relationship
@@ -96,6 +115,9 @@ class QuizUnits extends PluginGeneric
         CRUD::setPostTypeLabel('mp_lms_quiz_answer', 'Quiz Answer');
     }
 
+    /**
+     * Customize the WP Admin post listing
+     */
     private function admin_post_list()
     {
         // Add Quiz Units Listing Custom Columns
@@ -119,5 +141,18 @@ class QuizUnits extends PluginGeneric
                 echo $output;
             }
         });
+    }
+
+    /**
+     * Method called automatically on plugin activation
+     */
+    public static function activate()
+    {
+        self::taxonomies();
+
+        wp_insert_term('Essay','quiz_unit_type', ['slug' => 'essay']);
+        wp_insert_term('Multiple choice','quiz_unit_type', ['slug' => 'multiple_choice']);
+        wp_insert_term('True or False','quiz_unit_type', ['slug' => 'true_false']);
+        wp_insert_term('One Word Answer','quiz_unit_type', ['slug' => 'one_word']);
     }
 }

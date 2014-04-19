@@ -5,8 +5,15 @@ use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;
 use Mosaicpro\WpCore\PostList;
 
+/**
+ * Class Lessons
+ * @package Mosaicpro\WP\Plugins\LMS
+ */
 class Lessons extends PluginGeneric
 {
+    /**
+     * Create a new Lessons instance
+     */
     public function __construct()
     {
         parent::__construct();
@@ -14,6 +21,9 @@ class Lessons extends PluginGeneric
         $this->admin_post_list();
     }
 
+    /**
+     * Create the Meta Boxes
+     */
     private function metaboxes()
     {
         // Lessons -> Attributes Meta Box
@@ -24,6 +34,9 @@ class Lessons extends PluginGeneric
             ->register();
     }
 
+    /**
+     * Customize the WP Admin post list
+     */
     private function admin_post_list()
     {
         // Add Lessons Listing Custom Columns

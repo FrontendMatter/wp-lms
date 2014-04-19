@@ -6,18 +6,41 @@ use Mosaicpro\WpCore\FormBuilder;
 use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;
 use Mosaicpro\WpCore\PostList;
+use Mosaicpro\WpCore\Taxonomy;
 use Mosaicpro\WpCore\ThickBox;
 
+/**
+ * Class Courses
+ * @package Mosaicpro\WP\Plugins\LMS
+ */
 class Courses extends PluginGeneric
 {
+    /**
+     * Create a new Courses instance
+     */
     public function __construct()
     {
         parent::__construct();
+        $this->taxonomies();
         $this->metaboxes();
         $this->crud();
         $this->admin_post_list();
     }
 
+    /**
+     * Create the Taxonomies
+     */
+    private function taxonomies()
+    {
+        Taxonomy::make('topic')
+            ->setPostType(['mp_lms_lesson', 'mp_lms_course'])
+            ->setOption('args', ['show_admin_column' => true])
+            ->register();
+    }
+
+    /**
+     * Create the Meta Boxes
+     */
     private function metaboxes()
     {
         // Course -> Lessons Meta Box
@@ -33,6 +56,9 @@ class Courses extends PluginGeneric
             ->register();
     }
 
+    /**
+     * Create CRUD Relationships
+     */
     private function crud()
     {
         // Courses -> Lessons & Quiz Mixed CRUD Relationship
@@ -74,6 +100,9 @@ class Courses extends PluginGeneric
         CRUD::setPostTypeLabel('mp_lms_lesson', 'Lesson');
     }
 
+    /**
+     * Customize the WP Admin post list
+     */
     private function admin_post_list()
     {
         // Add Courses Listing Custom Columns

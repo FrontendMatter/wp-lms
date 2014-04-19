@@ -2,14 +2,24 @@
 
 use Mosaicpro\WpCore\PluginGeneric;
 
+/**
+ * Class Settings
+ * @package Mosaicpro\WP\Plugins\LMS
+ */
 class Settings extends PluginGeneric
 {
+    /**
+     * Create a new Settings instance
+     */
     public function __construct()
     {
         parent::__construct();
         $this->initSettings();
     }
 
+    /**
+     * Add actions for initializing the Settings menus, sections and fields
+     */
     private function initSettings()
     {
         add_action('admin_menu', [__CLASS__, 'menus']);
@@ -17,6 +27,9 @@ class Settings extends PluginGeneric
         add_action('admin_init', [__CLASS__, 'fields']);
     }
 
+    /**
+     * Initialize menu callback
+     */
     public static function menus()
     {
         add_menu_page(
@@ -47,6 +60,9 @@ class Settings extends PluginGeneric
 
     }
 
+    /**
+     * Initialize sections callback
+     */
     public static function sections()
     {
         add_settings_section(
@@ -65,6 +81,9 @@ class Settings extends PluginGeneric
 
     }
 
+    /**
+     * Initialize fields callback
+     */
     public static function fields()
     {
         add_settings_field(
@@ -106,6 +125,9 @@ class Settings extends PluginGeneric
         );
     }
 
+    /**
+     * Get the settings page content
+     */
     public static function getPage()
     {
         ?>
