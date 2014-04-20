@@ -1,5 +1,8 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
+use Mosaicpro\Core\IoC;
+use Mosaicpro\Nav\Nav;
+use Mosaicpro\Tab\Tab;
 use Mosaicpro\WpCore\CRUD;
 use Mosaicpro\WpCore\FormBuilder;
 use Mosaicpro\WpCore\MetaBox;
@@ -74,15 +77,55 @@ class Prerequisites extends PluginGeneric
         // Course -> Prerequisites Meta Box
         MetaBox::make($this->prefix, 'prerequisites', 'Course Prerequisites')
             ->setPostType('course')
-            ->setDisplay([
+            ->setFields(['enforce_prerequisites'])
+            ->setDisplay([ $this->getTabs() ])
+            ->register();
+    }
+
+    private function getTabs()
+    {
+        return function($post)
+        {
+            $html = IoC::getContainer('html');
+            $formbuilder = new FormBuilder;
+
+            $tabs_nav = Nav::make()
+                ->isTabs()
+                ->addNav($html->link('#prerequisites-list-tab', 'Prerequisites', ['data-toggle' => 'tab']))->isActive()
+                ->addNav($html->link('#prerequisites-settings-tab', 'Settings', ['data-toggle' => 'tab']));
+
+            $tabs_pane_list = [
                 '<div id="' . $this->prefix . '_prerequisite_list"></div>',
                 ThickBox::register_iframe( 'thickbox_quizez', 'Assign Prerequisites', 'admin-ajax.php',
                     ['action' => $this->prefix . '_list_prerequisite'] )->render(),
                 ThickBox::register_iframe( 'thickbox_quizez', 'New Prerequisite', 'admin-ajax.php',
                     ['action' => $this->prefix . '_edit_mp_lms_prerequisite'] )
                     ->setButtonAttributes(['class' => 'button thickbox button-primary'])->render()
-            ])
-            ->register();
+            ];
+
+            $tab_pane_settings = [
+                '<div class="row"><div class="col-md-4">',
+
+                $formbuilder->get_radio(
+                    'enforce_prerequisites',
+                    'Enforce Prerequisites',
+                    !empty($post->enforce_prerequisites) ? esc_attr($post->enforce_prerequisites) : 'false',
+                    ['true' => 'On', 'false' => 'Off']
+                ),
+
+                '</div><div class="col-md-8">
+                    <p><strong>If Enforce Prerequisites is set to ON</strong>, the Student isn\'t allowed to take the Course until all the prerequisite Courses and/or Lessons are finalized first;</p>
+                    <p><strong>NOT</strong> applicable on Prerequisites from external sources.</p>
+                </div></div>'
+            ];
+
+            $tabs_panes = Tab::make()
+                ->isFade()
+                ->addTab('prerequisites-list-tab', implode(PHP_EOL, $tabs_pane_list))->isActive()
+                ->addTab('prerequisites-settings-tab', implode(PHP_EOL, $tab_pane_settings));
+
+            echo implode(PHP_EOL, [$tabs_nav, $tabs_panes]);
+        };
     }
 
     /**

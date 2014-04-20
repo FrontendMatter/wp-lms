@@ -15,7 +15,7 @@ if ( ! defined( 'WPINC' ) ) { die; }
 use Mosaicpro\Core\IoC;
 use Mosaicpro\WpCore\Plugin;
 
-// Define Plugin libraries
+// Plugin libraries
 $libraries = [
     'LMS',
     'Courses',
@@ -27,6 +27,7 @@ $libraries = [
     'Settings'
 ];
 
+// Plugin initialization
 add_action('plugins_loaded', function() use ($libraries)
 {
     // Get the Container from IoC
