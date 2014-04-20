@@ -4,6 +4,7 @@ use Mosaicpro\WpCore\CRUD;
 use Mosaicpro\WpCore\FormBuilder;
 use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;
+use Mosaicpro\WpCore\PostType;
 use Mosaicpro\WpCore\ThickBox;
 use Mosaicpro\WpCore\Utility;
 
@@ -19,8 +20,19 @@ class Prerequisites extends PluginGeneric
     public function __construct()
     {
         parent::__construct();
+        $this->post_types();
         $this->crud();
         $this->metaboxes();
+    }
+
+    /**
+     * Create the Prerequisites post type
+     */
+    private function post_types()
+    {
+        PostType::make('prerequisites', $this->prefix)
+            ->setOptions(['show_ui' => false, 'supports' => false])
+            ->register();
     }
 
     /**
@@ -49,12 +61,6 @@ class Prerequisites extends PluginGeneric
                 $value .= ' <em>(' . $post->type . ')</em>';
                 return ['field' => 'Prerequisite', 'value' => $value];
             } ])
-            ->setPostTypeOptions('mp_lms_prerequisite', [
-                'args' => [
-                    'show_ui' => false,
-                    'supports' => false
-                ]
-            ])
             ->register();
 
         CRUD::setPostTypeLabel('mp_lms_prerequisite', 'Prerequisite');
@@ -85,10 +91,15 @@ class Prerequisites extends PluginGeneric
      */
     private function getForm($post)
     {
-        if (empty($post)) $post = new \stdClass();
         $lessons = FormBuilder::select_values('mp_lms_lesson', '-- Select a lesson --');
         $courses = FormBuilder::select_values('mp_lms_course', '-- Select a course --');
         $prerequisite_types = [ 'url' => 'External URL', 'lesson' => 'Lesson', 'course' => 'Course' ];
+        if (empty($post))
+        {
+            $post = new \stdClass();
+            $post->type = 'url';
+            foreach ($prerequisite_types as $pt => $pv) $post->$pt = '';
+        }
         ?>
 
         <div id="prerequisite_type"><?php FormBuilder::radio('meta[type]', 'Prerequisite type', esc_attr($post->type), $prerequisite_types); ?></div>

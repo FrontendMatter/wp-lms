@@ -5,6 +5,7 @@ use Mosaicpro\WpCore\FormBuilder;
 use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;
 use Mosaicpro\WpCore\PostList;
+use Mosaicpro\WpCore\PostType;
 use Mosaicpro\WpCore\Taxonomy;
 use Mosaicpro\WpCore\ThickBox;
 use Mosaicpro\WpCore\Utility;
@@ -21,10 +22,21 @@ class QuizUnits extends PluginGeneric
     public function __construct()
     {
         parent::__construct();
+        $this->post_types();
         $this->taxonomies();
         $this->metaboxes();
         $this->crud();
         $this->admin_post_list();
+    }
+
+    /**
+     * Create the QuizUnits post type
+     */
+    private function post_types()
+    {
+        PostType::make('quiz unit', $this->prefix)
+            ->setOptions(['supports' => ['title'], 'show_in_menu' => $this->prefix])
+            ->register();
     }
 
     /**
@@ -94,13 +106,6 @@ class QuizUnits extends PluginGeneric
     {
         // Quiz Units -> Quiz Answers CRUD Relationship
         CRUD::make($this->prefix, 'quiz_unit', 'quiz_answer')
-            ->setPostTypeOptions('mp_lms_quiz_answer', [
-                'name' => 'quiz answer',
-                'args' => [
-                    'supports' => ['title'],
-                    'show_in_menu' => $this->prefix
-                ]
-            ])
             ->setListFields('mp_lms_quiz_answer', [
                 'ID',
                 'crud_edit_post_title',

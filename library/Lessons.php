@@ -4,6 +4,7 @@ use Mosaicpro\WpCore\Date;
 use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;
 use Mosaicpro\WpCore\PostList;
+use Mosaicpro\WpCore\PostType;
 
 /**
  * Class Lessons
@@ -17,8 +18,22 @@ class Lessons extends PluginGeneric
     public function __construct()
     {
         parent::__construct();
+        $this->post_types();
         $this->metaboxes();
         $this->admin_post_list();
+    }
+
+    /**
+     * Create the post types
+     */
+    private function post_types()
+    {
+        PostType::make('lesson', $this->prefix)
+            ->setOptions([
+                'supports' => ['title', 'excerpt', 'editor', 'thumbnail'],
+                'show_in_menu' => $this->prefix
+            ])
+            ->register();
     }
 
     /**

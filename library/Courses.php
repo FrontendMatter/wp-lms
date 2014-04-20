@@ -6,6 +6,7 @@ use Mosaicpro\WpCore\FormBuilder;
 use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;
 use Mosaicpro\WpCore\PostList;
+use Mosaicpro\WpCore\PostType;
 use Mosaicpro\WpCore\Taxonomy;
 use Mosaicpro\WpCore\ThickBox;
 
@@ -21,10 +22,21 @@ class Courses extends PluginGeneric
     public function __construct()
     {
         parent::__construct();
+        $this->post_types();
         $this->taxonomies();
         $this->metaboxes();
         $this->crud();
         $this->admin_post_list();
+    }
+
+    /**
+     * Create the Courses post type
+     */
+    private function post_types()
+    {
+        PostType::make('course', $this->prefix)
+            ->setOptions(['show_in_menu' => $this->prefix])
+            ->register();
     }
 
     /**
@@ -63,15 +75,6 @@ class Courses extends PluginGeneric
     {
         // Courses -> Lessons & Quiz Mixed CRUD Relationship
         CRUD::make($this->prefix, 'course', ['lesson', 'quiz'])
-            ->setPostTypeOptions('mp_lms_lesson', [
-                'args' => [
-                    'supports' => ['title', 'excerpt', 'editor', 'thumbnail'],
-                    'show_in_menu' => $this->prefix
-                ]
-            ])
-            ->setPostTypeOptions('mp_lms_quiz', [
-                'name' => ['quiz', 'quizez']
-            ])
             ->setListFields('mp_lms_lesson', [
                 'ID',
                 'post_thumbnail',
@@ -88,7 +91,7 @@ class Courses extends PluginGeneric
             ])
             ->setListFields('mp_lms_quiz', [
                 'ID',
-                'crud_edit_post_title',
+                'post_title',
                 'count_mp_lms_quiz_unit'
             ])
             ->setForm('mp_lms_lesson', function($post)

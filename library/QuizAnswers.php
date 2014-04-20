@@ -2,6 +2,7 @@
 
 use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;
+use Mosaicpro\WpCore\PostType;
 
 /**
  * Class QuizAnswers
@@ -15,7 +16,18 @@ class QuizAnswers extends PluginGeneric
     public function __construct()
     {
         parent::__construct();
+        $this->post_types();
         $this->metaboxes();
+    }
+
+    /**
+     * Create the QuizAnswers post type
+     */
+    private function post_types()
+    {
+        PostType::make('quiz answer')
+            ->setOptions(['supports' => ['title'], 'show_in_menu' => $this->prefix])
+            ->register();
     }
 
     /**
