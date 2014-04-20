@@ -43,13 +43,38 @@ class Prerequisites extends PluginGeneric
      */
     private function crud()
     {
+        $relation = 'mp_lms_prerequisite';
+
         // Courses -> Prerequisites CRUD Relationship
         CRUD::make($this->prefix, 'course', 'prerequisite')
-            ->setForm('mp_lms_prerequisite', function($post) { return $this->getForm($post); })
-            ->validateForm('mp_lms_prerequisite', function($instance) { return $this->validateForm($instance); })
-            ->setFormFields('mp_lms_prerequisite', [])
-            ->setFormButtons('mp_lms_prerequisite', ['save'])
-            ->setListFields('mp_lms_prerequisite', [ 'ID', function($post)
+            ->setForm($relation, function($post) { return $this->getForm($post); })
+            ->validateForm($relation, function($instance) { return $this->validateForm($instance); })
+            ->setFormFields($relation, [])
+            ->setFormButtons($relation, ['save'])
+            ->setListFields($relation, $this->getListFields())
+            ->register();
+
+        // Lessons -> Prerequisites CRUD Relationship
+        CRUD::make($this->prefix, 'lesson', 'prerequisite')
+            ->setForm($relation, function($post) { return $this->getForm($post); })
+            ->validateForm($relation, function($instance) { return $this->validateForm($instance); })
+            ->setFormFields($relation, [])
+            ->setFormButtons($relation, ['save'])
+            ->setListFields($relation, $this->getListFields())
+            ->register();
+
+        CRUD::setPostTypeLabel('mp_lms_prerequisite', 'Prerequisite');
+    }
+
+    /**
+     * Get the CRUD List Fields
+     * @return array
+     */
+    private function getListFields()
+    {
+        return [
+            'ID',
+            function($post)
             {
                 $value = '';
                 if ($post->type == 'url') $value .= $post->url;
@@ -63,10 +88,8 @@ class Prerequisites extends PluginGeneric
                 }
                 $value .= ' <em>(' . $post->type . ')</em>';
                 return ['field' => 'Prerequisite', 'value' => $value];
-            } ])
-            ->register();
-
-        CRUD::setPostTypeLabel('mp_lms_prerequisite', 'Prerequisite');
+            }
+        ];
     }
 
     /**
@@ -80,8 +103,19 @@ class Prerequisites extends PluginGeneric
             ->setFields(['enforce_prerequisites'])
             ->setDisplay([ $this->getTabs() ])
             ->register();
+
+        // Lesson -> Prerequisites Meta Box
+        MetaBox::make($this->prefix, 'prerequisites', 'Lesson Prerequisites')
+            ->setPostType('lesson')
+            ->setFields(['enforce_prerequisites'])
+            ->setDisplay([ $this->getTabs() ])
+            ->register();
     }
 
+    /**
+     * Get the MetaBox Tabs
+     * @return callable
+     */
     private function getTabs()
     {
         return function($post)
