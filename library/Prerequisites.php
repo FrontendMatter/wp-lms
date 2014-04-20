@@ -1,6 +1,7 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
 use Mosaicpro\Core\IoC;
+use Mosaicpro\Grid\Grid;
 use Mosaicpro\Nav\Nav;
 use Mosaicpro\Tab\Tab;
 use Mosaicpro\WpCore\CRUD;
@@ -137,26 +138,22 @@ class Prerequisites extends PluginGeneric
                     ->setButtonAttributes(['class' => 'button thickbox button-primary'])->render()
             ];
 
-            $tab_pane_settings = [
-                '<div class="row"><div class="col-md-4">',
-
-                $formbuilder->get_radio(
-                    'enforce_prerequisites',
-                    'Enforce Prerequisites',
-                    !empty($post->enforce_prerequisites) ? esc_attr($post->enforce_prerequisites) : 'false',
-                    ['true' => 'On', 'false' => 'Off']
-                ),
-
-                '</div><div class="col-md-8">
-                    <p><strong>If Enforce Prerequisites is set to ON</strong>, the Student isn\'t allowed to take the Course until all the prerequisite Courses and/or Lessons are finalized first;</p>
-                    <p><strong>NOT</strong> applicable on Prerequisites from external sources.</p>
-                </div></div>'
-            ];
+            $tab_pane_settings = Grid::make();
+            $tab_pane_settings->addColumn(4, $formbuilder->get_radio(
+                'enforce_prerequisites',
+                'Enforce Prerequisites',
+                !empty($post->enforce_prerequisites) ? esc_attr($post->enforce_prerequisites) : 'false',
+                ['true' => 'On', 'false' => 'Off']
+            ));
+            $tab_pane_settings->addColumn(8,
+                '<p><strong>If Enforce Prerequisites is set to ON</strong>, the Student isn\'t allowed to take the Course until all the prerequisite Courses and/or Lessons are finalized first;</p>
+                <p><strong>NOT</strong> applicable on Prerequisites from external sources.</p>'
+            );
 
             $tabs_panes = Tab::make()
                 ->isFade()
                 ->addTab('prerequisites-list-tab', implode(PHP_EOL, $tabs_pane_list))->isActive()
-                ->addTab('prerequisites-settings-tab', implode(PHP_EOL, $tab_pane_settings));
+                ->addTab('prerequisites-settings-tab', $tab_pane_settings);
 
             echo implode(PHP_EOL, [$tabs_nav, $tabs_panes]);
         };
