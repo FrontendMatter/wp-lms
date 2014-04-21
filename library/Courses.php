@@ -56,13 +56,13 @@ class Courses extends PluginGeneric
     private function metaboxes()
     {
         // Course -> Lessons Meta Box
-        MetaBox::make($this->prefix, 'lesson_quiz', 'Course Lessons')
+        MetaBox::make($this->prefix, 'lesson_quiz', $this->__('Course Lessons'))
             ->setPostType('course')
             ->setDisplay([
                 '<div id="' . $this->prefix . '_lesson_quiz_list"></div>',
-                ThickBox::register_iframe( 'thickbox_lessons', 'Add Lessons', 'admin-ajax.php',
+                ThickBox::register_iframe( 'thickbox_lessons', $this->__('Add Lessons'), 'admin-ajax.php',
                     ['action' => 'list_course_mp_lms_lesson'] )->render(),
-                ThickBox::register_iframe( 'thickbox_quizez', 'Add Quizez', 'admin-ajax.php',
+                ThickBox::register_iframe( 'thickbox_quizez', $this->__('Add Quizez'), 'admin-ajax.php',
                     ['action' => 'list_course_mp_lms_quiz'] )->render()
             ])
             ->register();
@@ -82,7 +82,7 @@ class Courses extends PluginGeneric
                 function($post)
                 {
                     return [
-                        'field' => 'Title',
+                        'field' => $this->__('Title'),
                         'value' => $post->post_title .
                             '<p><small class="label label-default">' .
                             Date::time_format(implode(":", $post->duration)) . '</small></p>'
@@ -96,11 +96,11 @@ class Courses extends PluginGeneric
             ])
             ->setForm('mp_lms_lesson', function($post)
             {
-                FormBuilder::select_hhmmss('duration', 'Duration', $post->duration);
+                FormBuilder::select_hhmmss('duration', $this->__('Duration'), $post->duration);
             })
             ->register();
 
-        CRUD::setPostTypeLabel('mp_lms_lesson', 'Lesson');
+        CRUD::setPostTypeLabel('mp_lms_lesson', $this->__('Lesson'));
     }
 
     /**
@@ -110,11 +110,11 @@ class Courses extends PluginGeneric
     {
         // Add Courses Listing Custom Columns
         PostList::add_columns($this->prefix . '_course', [
-            ['thumbnail', 'Thumbnail', 1],
-            ['lessons', 'Lessons', 3],
-            ['quizez', 'Quizez', 4],
-            ['duration', 'Duration', 5],
-            ['author', 'Instructor', 6]
+            ['thumbnail', $this->__('Thumbnail'), 1],
+            ['lessons', $this->__('Lessons'), 3],
+            ['quizez', $this->__('Quizez'), 4],
+            ['duration', $this->__('Duration'), 5],
+            ['author', $this->__('Instructor'), 6]
         ]);
 
         // Display Courses Listing Custom Columns

@@ -36,9 +36,9 @@ class QuizAnswers extends PluginGeneric
     private function metaboxes()
     {
         // Quiz Answer Attributes
-        MetaBox::make($this->prefix, 'quiz_answer_attributes', 'Answer Attributes')
+        MetaBox::make($this->prefix, 'quiz_answer_attributes', $this->__('Answer Attributes'))
             ->setPostType('quiz_answer')
-            ->setField('correct', 'The answer is correct', 'checkbox')
+            ->setField('correct', $this->__('The answer is correct'), 'checkbox')
             ->register();
     }
 } 

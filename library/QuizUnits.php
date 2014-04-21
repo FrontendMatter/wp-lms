@@ -48,7 +48,7 @@ class QuizUnits extends PluginGeneric
             ->setType('radio')
             ->setPostType('mp_lms_quiz_unit')
             ->setOption('update_meta_box', [
-                'label' => 'Quiz Unit Type',
+                'label' => PluginGeneric::getInstance()->__('Quiz Unit Type'),
                 'context' => 'normal',
                 'priority' => 'high'
             ])
@@ -61,28 +61,28 @@ class QuizUnits extends PluginGeneric
     private function metaboxes()
     {
         // Quiz Units -> Multiple Choice -> Quiz Answers Meta Box
-        MetaBox::make($this->prefix, 'quiz_answer_multiple_choice', 'Multiple Choice Answers')
+        MetaBox::make($this->prefix, 'quiz_answer_multiple_choice', $this->__('Multiple Choice Answers'))
             ->setPostType('quiz_unit')
             ->setDisplay([
                 '<div id="' . $this->prefix . '_quiz_answer_list"></div>',
-                ThickBox::register_iframe( 'thickbox_answers', 'Add Answers', 'admin-ajax.php',
+                ThickBox::register_iframe( 'thickbox_answers', $this->__('Add Answers'), 'admin-ajax.php',
                     ['action' => 'list_quiz_unit_mp_lms_quiz_answer'] )->render()
             ])
             ->register();
 
         // Quiz Units -> True or False -> Correct Answer Meta Box
-        MetaBox::make($this->prefix, 'quiz_answer_true_false', 'True of False Answer')
+        MetaBox::make($this->prefix, 'quiz_answer_true_false', $this->__('True of False Answer'))
             ->setPostType('quiz_unit')
-            ->setField('correct_answer_true_false', 'Select the correct answer', ['true', 'false'], 'radio')
+            ->setField('correct_answer_true_false', $this->__('Select the correct answer'), [$this->__('True'), $this->__('False')], 'radio')
             ->register();
 
         // Quiz Units -> One Word -> Correct Answer Meta Box
-        MetaBox::make($this->prefix, 'quiz_answer_one_word', 'One Word Correct Answer')
+        MetaBox::make($this->prefix, 'quiz_answer_one_word', $this->__('One Word Correct Answer'))
             ->setPostType('quiz_unit')
-            ->setField('correct_answer_one_word', 'Provide the correct answer', 'input')
+            ->setField('correct_answer_one_word', $this->__('Provide the correct answer'), 'input')
             ->setDisplay([
                 'fields',
-                '<p><strong>Note:</strong> You can provide a list of multiple words or word variations separated with a comma; If you provide a list, then any word from the list will be treated as the correct answer.</p>'
+                $this->__('<p><strong>Note:</strong> You can provide a list of multiple words or word variations separated with a comma; If you provide a list, then any word from the list will be treated as the correct answer.</p>')
             ])
             ->register();
 
@@ -113,11 +113,11 @@ class QuizUnits extends PluginGeneric
             ])
             ->setForm('mp_lms_quiz_answer', function($post)
             {
-                FormBuilder::checkbox('correct', 'The answer is correct', 1, esc_attr($post->correct) == 1);
+                FormBuilder::checkbox('correct', $this->__('The answer is correct'), 1, esc_attr($post->correct) == 1);
             })
             ->register();
 
-        CRUD::setPostTypeLabel('mp_lms_quiz_answer', 'Quiz Answer');
+        CRUD::setPostTypeLabel('mp_lms_quiz_answer', $this->__('Quiz Answer'));
     }
 
     /**
@@ -139,8 +139,8 @@ class QuizUnits extends PluginGeneric
                 $output = '<strong>' . $type->name . '</strong>';
                 if ($type->slug == 'multiple_choice')
                 {
-                    $answers = get_post_meta($post_id, 'mp_lms_quiz_answer');
-                    $output .= ' <em>(' . count($answers) . ' Answers)</em>';
+                    $answers = count(get_post_meta($post_id, 'mp_lms_quiz_answer'));
+                    $output .= ' <em>(' . sprintf( $this->__('%1$s Answers'), $answers ) . ')</em>';
                 }
                 echo $output;
             }

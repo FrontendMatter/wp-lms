@@ -43,20 +43,20 @@ class Quizez extends PluginGeneric
     private function metaboxes()
     {
         // Quiz -> Quiz Units Meta Box
-        MetaBox::make($this->prefix, 'quiz_unit', 'Quiz Units')
+        MetaBox::make($this->prefix, 'quiz_unit', $this->__('Quiz Units'))
             ->setPostType('quiz')
             ->setDisplay([
                 '<div id="' . $this->prefix . '_quiz_unit_list"></div>',
-                ThickBox::register_iframe( 'thickbox_units', 'Add Unit to Quiz', 'admin-ajax.php',
+                ThickBox::register_iframe( 'thickbox_units', $this->__('Add Unit to Quiz'), 'admin-ajax.php',
                     ['action' => 'list_quiz_mp_lms_quiz_unit'] )->render()
             ])
             ->register();
 
         // Quiz -> Timer Meta Box
-        MetaBox::make($this->prefix, 'quiz_timer', 'Quiz Timer')
+        MetaBox::make($this->prefix, 'quiz_timer', $this->__('Quiz Timer'))
             ->setPostType('quiz')
-            ->setField('timer_enabled', 'Enable/Disable the Quiz Timer', ['true' => 'On', 'false' => 'Off'], 'radio')
-            ->setField('timer_limit', 'Set the timer limit (hh:mm:ss)', 'select_hhmmss')
+            ->setField('timer_enabled', $this->__('Enable/Disable the Quiz Timer'), ['true' => $this->__('On'), 'false' => $this->__('Off')], 'radio')
+            ->setField('timer_limit', $this->__('Set the timer limit (hh:mm:ss)'), 'select_hhmmss')
             ->register();
 
         // Only show the Quiz Timer Limit if the Quiz Timer is enabled
@@ -83,17 +83,20 @@ class Quizez extends PluginGeneric
                 {
                     $type = Taxonomy::get_term($post->ID, 'quiz_unit_type');
                     $output = '<strong>' . $type->name . '</strong>';
-                    if ($type->slug == 'multiple_choice') $output .= ' <em>(' . count(get_post_meta($post->ID, 'mp_lms_quiz_answer')) . ' Answers)</em>';
+                    if ($type->slug == 'multiple_choice') {
+                        $answers = count(get_post_meta($post->ID, 'mp_lms_quiz_answer'));
+                        $output .= ' <em>(' . sprintf( $this->__('%1$s Answers'), $answers ) . ')</em>';
+                    }
                     return [
-                        'field' => 'Quiz Type',
+                        'field' => $this->__('Quiz Type'),
                         'value' => $output
                     ];
                 }
             ])
             ->register();
 
-        CRUD::setPostTypeLabel('mp_lms_quiz', 'Quiz');
-        CRUD::setPostTypeLabel('mp_lms_quiz_unit', 'Quiz Unit');
+        CRUD::setPostTypeLabel('mp_lms_quiz', $this->__('Quiz'));
+        CRUD::setPostTypeLabel('mp_lms_quiz_unit', $this->__('Quiz Unit'));
     }
 
     /**
@@ -103,7 +106,7 @@ class Quizez extends PluginGeneric
     {
         // Add Quizez Listing Custom Columns
         PostList::add_columns($this->prefix . '_quiz', [
-            ['quiz_units', 'Quiz Units', 2]
+            ['quiz_units', $this->__('Quiz Units'), 2]
         ]);
 
         // Display Quizez Listing Custom Columns
@@ -112,7 +115,7 @@ class Quizez extends PluginGeneric
             if ($column == 'quiz_units')
             {
                 $units = get_post_meta($post_id, 'mp_lms_quiz_unit');
-                echo count($units);
+                echo count($units) . ' ' . $this->__('Quiz Units');
             }
         });
     }

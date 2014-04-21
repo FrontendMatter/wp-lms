@@ -64,7 +64,7 @@ class Prerequisites extends PluginGeneric
             ->setListFields($relation, $this->getListFields())
             ->register();
 
-        CRUD::setPostTypeLabel('mp_lms_prerequisite', 'Prerequisite');
+        CRUD::setPostTypeLabel('mp_lms_prerequisite', $this->__('Prerequisite'));
     }
 
     /**
@@ -88,7 +88,7 @@ class Prerequisites extends PluginGeneric
                     $value .= $course->post_title;
                 }
                 $value .= ' <em>(' . $post->type . ')</em>';
-                return ['field' => 'Prerequisite', 'value' => $value];
+                return ['field' => $this->__('Prerequisite'), 'value' => $value];
             }
         ];
     }
@@ -99,14 +99,14 @@ class Prerequisites extends PluginGeneric
     private function metaboxes()
     {
         // Course -> Prerequisites Meta Box
-        MetaBox::make($this->prefix, 'prerequisites', 'Course Prerequisites')
+        MetaBox::make($this->prefix, 'prerequisites', $this->__('Course Prerequisites'))
             ->setPostType('course')
             ->setFields(['enforce_prerequisites'])
             ->setDisplay([ $this->getTabs() ])
             ->register();
 
         // Lesson -> Prerequisites Meta Box
-        MetaBox::make($this->prefix, 'prerequisites', 'Lesson Prerequisites')
+        MetaBox::make($this->prefix, 'prerequisites', $this->__('Lesson Prerequisites'))
             ->setPostType('lesson')
             ->setFields(['enforce_prerequisites'])
             ->setDisplay([ $this->getTabs() ])
@@ -126,16 +126,16 @@ class Prerequisites extends PluginGeneric
 
             $tabs_nav = Nav::make()
                 ->isTabs()
-                ->addNav($html->link('#prerequisites-list-tab', 'Prerequisites', ['data-toggle' => 'tab']))->isActive()
-                ->addNav($html->link('#prerequisites-settings-tab', 'Settings', ['data-toggle' => 'tab']));
+                ->addNav($html->link('#prerequisites-list-tab', $this->__('Prerequisites'), ['data-toggle' => 'tab']))->isActive()
+                ->addNav($html->link('#prerequisites-settings-tab', $this->__('Settings'), ['data-toggle' => 'tab']));
 
             $thickbox_post = str_replace("mp_lms_", "", $post->post_type);
 
             $tabs_pane_list = [
                 '<div id="' . $this->prefix . '_prerequisite_list"></div>',
-                ThickBox::register_iframe( 'thickbox_quizez', 'Assign Prerequisites', 'admin-ajax.php',
+                ThickBox::register_iframe( 'thickbox_quizez', $this->__('Assign Prerequisites'), 'admin-ajax.php',
                     ['action' => 'list_' . $thickbox_post . '_mp_lms_prerequisite'] )->render(),
-                ThickBox::register_iframe( 'thickbox_quizez', 'New Prerequisite', 'admin-ajax.php',
+                ThickBox::register_iframe( 'thickbox_quizez', $this->__('New Prerequisite'), 'admin-ajax.php',
                     ['action' => 'edit_' . $thickbox_post . '_mp_lms_prerequisite'] )
                     ->setButtonAttributes(['class' => 'button thickbox button-primary'])->render()
             ];
@@ -151,14 +151,14 @@ class Prerequisites extends PluginGeneric
             $tab_pane_settings = Grid::make();
             $tab_pane_settings->addColumn(4, $formbuilder->get_radio(
                 'enforce_prerequisites',
-                'Enforce Prerequisites',
+                $this->__('Enforce Prerequisites'),
                 !empty($post->enforce_prerequisites) ? esc_attr($post->enforce_prerequisites) : 'false',
                 ['true' => 'On', 'false' => 'Off'],
                 $enforce_attributes
             ));
             $tab_pane_settings->addColumn(8,
-                '<p><strong>If Enforce Prerequisites is set to ON</strong>, the Student isn\'t allowed to take the Course until all the prerequisite Courses and/or Lessons are finalized first;</p>
-                <p><strong>NOT</strong> applicable on Prerequisites from external sources.</p>'
+                $this->__('<p><strong>If Enforce Prerequisites is set to ON</strong>, the Student isn\'t allowed to take the Course until all the prerequisite Courses and/or Lessons are finalized first;</p>
+                <p><strong>NOT</strong> applicable on Prerequisites from external sources.</p>')
             );
 
             $tabs_panes = Tab::make()
@@ -176,9 +176,9 @@ class Prerequisites extends PluginGeneric
      */
     private function getForm($post)
     {
-        $lessons = FormBuilder::select_values('mp_lms_lesson', '-- Select a lesson --');
-        $courses = FormBuilder::select_values('mp_lms_course', '-- Select a course --');
-        $prerequisite_types = [ 'url' => 'External URL', 'lesson' => 'Lesson', 'course' => 'Course' ];
+        $lessons = FormBuilder::select_values('mp_lms_lesson', $this->__('-- Select a lesson --'));
+        $courses = FormBuilder::select_values('mp_lms_course', $this->__('-- Select a course --'));
+        $prerequisite_types = [ 'url' => $this->__('External URL'), 'lesson' => $this->__('Lesson'), 'course' => $this->__('Course') ];
         if (empty($post))
         {
             $post = new \stdClass();
@@ -187,10 +187,10 @@ class Prerequisites extends PluginGeneric
         }
         ?>
 
-        <div id="prerequisite_type"><?php FormBuilder::radio('meta[type]', 'Prerequisite type', esc_attr($post->type), $prerequisite_types); ?></div>
-        <div id="prerequisite_url"><?php FormBuilder::input('meta[url]', 'Provide an external prerequisite URL', esc_attr($post->url)); ?></div>
-        <div id="prerequisite_lesson"><?php FormBuilder::select('meta[lesson]', 'Select a Lesson', $post->lesson, $lessons); ?></div>
-        <div id="prerequisite_course"><?php FormBuilder::select('meta[course]', 'Select a Course', $post->course, $courses); ?></div>
+        <div id="prerequisite_type"><?php FormBuilder::radio('meta[type]', $this->__('Prerequisite type'), esc_attr($post->type), $prerequisite_types); ?></div>
+        <div id="prerequisite_url"><?php FormBuilder::input('meta[url]', $this->__('Provide an external prerequisite URL'), esc_attr($post->url)); ?></div>
+        <div id="prerequisite_lesson"><?php FormBuilder::select('meta[lesson]', $this->__('Select a Lesson'), $post->lesson, $lessons); ?></div>
+        <div id="prerequisite_course"><?php FormBuilder::select('meta[course]', $this->__('Select a Course'), $post->course, $courses); ?></div>
 
         <?php
         foreach ($prerequisite_types as $type => $label)
@@ -217,11 +217,11 @@ class Prerequisites extends PluginGeneric
             return $instance->setFormValidationError();
 
         if (empty($meta['type']))
-            return $instance->setFormValidationError('Please select a prerequisite type.');
+            return $instance->setFormValidationError($this->__('Please select a prerequisite type.'));
 
         $type = $meta['type'];
         if (empty($meta[$type]))
-            return $instance->setFormValidationError('Please provide a ' . $type . ' prerequisite or select a different type.');
+            return $instance->setFormValidationError( sprintf( $this->__('Please provide a %1$s prerequisite or select a different type.'), $type ) );
 
         return true;
     }

@@ -7,6 +7,7 @@ Description: Learning Management System with Courses, Quizes, WooCommerce, Buddy
 Version: 1.0
 Author: MosaicPro
 Author URI: http://mosaicpro.biz
+Text Domain: mp-lms
 */
 
 // If this file is called directly, exit.
