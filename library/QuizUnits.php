@@ -66,7 +66,7 @@ class QuizUnits extends PluginGeneric
             ->setDisplay([
                 '<div id="' . $this->prefix . '_quiz_answer_list"></div>',
                 ThickBox::register_iframe( 'thickbox_answers', 'Add Answers', 'admin-ajax.php',
-                    ['action' => $this->prefix . '_list_quiz_answer'] )->render()
+                    ['action' => 'list_quiz_unit_mp_lms_quiz_answer'] )->render()
             ])
             ->register();
 
@@ -135,12 +135,11 @@ class QuizUnits extends PluginGeneric
         {
             if ($column == 'type')
             {
-                $postterms = get_the_terms( $post_id, 'quiz_unit_type' );
-                $current = ($postterms ? array_pop($postterms) : false);
-                $output = '<strong>' . $current->name . '</strong>';
-                if ($current->slug == 'multiple_choice')
+                $type = Taxonomy::get_term($post_id, 'quiz_unit_type');
+                $output = '<strong>' . $type->name . '</strong>';
+                if ($type->slug == 'multiple_choice')
                 {
-                    $answers = get_post_meta($post_id, 'mp_lms_quiz_answer', true);
+                    $answers = get_post_meta($post_id, 'mp_lms_quiz_answer');
                     $output .= ' <em>(' . count($answers) . ' Answers)</em>';
                 }
                 echo $output;

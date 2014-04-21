@@ -129,21 +129,32 @@ class Prerequisites extends PluginGeneric
                 ->addNav($html->link('#prerequisites-list-tab', 'Prerequisites', ['data-toggle' => 'tab']))->isActive()
                 ->addNav($html->link('#prerequisites-settings-tab', 'Settings', ['data-toggle' => 'tab']));
 
+            $thickbox_post = str_replace("mp_lms_", "", $post->post_type);
+
             $tabs_pane_list = [
                 '<div id="' . $this->prefix . '_prerequisite_list"></div>',
                 ThickBox::register_iframe( 'thickbox_quizez', 'Assign Prerequisites', 'admin-ajax.php',
-                    ['action' => $this->prefix . '_list_prerequisite'] )->render(),
+                    ['action' => 'list_' . $thickbox_post . '_mp_lms_prerequisite'] )->render(),
                 ThickBox::register_iframe( 'thickbox_quizez', 'New Prerequisite', 'admin-ajax.php',
-                    ['action' => $this->prefix . '_edit_mp_lms_prerequisite'] )
+                    ['action' => 'edit_' . $thickbox_post . '_mp_lms_prerequisite'] )
                     ->setButtonAttributes(['class' => 'button thickbox button-primary'])->render()
             ];
+
+            $enforce_attributes = [];
+            if ($post->post_type == 'mp_lms_lesson')
+            {
+                $courses_with_lesson = CRUD::find_connected_with_post($post, 'mp_lms_course');
+                if (count($courses_with_lesson) > 0)
+                    $enforce_attributes = ['disabled'];
+            }
 
             $tab_pane_settings = Grid::make();
             $tab_pane_settings->addColumn(4, $formbuilder->get_radio(
                 'enforce_prerequisites',
                 'Enforce Prerequisites',
                 !empty($post->enforce_prerequisites) ? esc_attr($post->enforce_prerequisites) : 'false',
-                ['true' => 'On', 'false' => 'Off']
+                ['true' => 'On', 'false' => 'Off'],
+                $enforce_attributes
             ));
             $tab_pane_settings->addColumn(8,
                 '<p><strong>If Enforce Prerequisites is set to ON</strong>, the Student isn\'t allowed to take the Course until all the prerequisite Courses and/or Lessons are finalized first;</p>

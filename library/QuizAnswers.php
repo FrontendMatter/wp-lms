@@ -25,7 +25,7 @@ class QuizAnswers extends PluginGeneric
      */
     private function post_types()
     {
-        PostType::make('quiz answer')
+        PostType::make('quiz answer', $this->prefix)
             ->setOptions(['supports' => ['title'], 'show_in_menu' => $this->prefix])
             ->register();
     }

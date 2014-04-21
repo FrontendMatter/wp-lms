@@ -5,6 +5,7 @@ use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;
 use Mosaicpro\WpCore\PostList;
 use Mosaicpro\WpCore\PostType;
+use Mosaicpro\WpCore\Taxonomy;
 use Mosaicpro\WpCore\ThickBox;
 use Mosaicpro\WpCore\Utility;
 
@@ -47,7 +48,7 @@ class Quizez extends PluginGeneric
             ->setDisplay([
                 '<div id="' . $this->prefix . '_quiz_unit_list"></div>',
                 ThickBox::register_iframe( 'thickbox_units', 'Add Unit to Quiz', 'admin-ajax.php',
-                    ['action' => $this->prefix . '_list_quiz_unit'] )->render()
+                    ['action' => 'list_quiz_mp_lms_quiz_unit'] )->render()
             ])
             ->register();
 
@@ -80,10 +81,9 @@ class Quizez extends PluginGeneric
                 'post_title',
                 function($post)
                 {
-                    $postterms = get_the_terms( $post, 'quiz_unit_type' );
-                    $current = ($postterms ? array_pop($postterms) : false);
-                    $output = '<strong>' . $current->name . '</strong>';
-                    if ($current->slug == 'multiple_choice') $output .= ' <em>(' . count($post->mp_lms_quiz_answer) . ' Answers)</em>';
+                    $type = Taxonomy::get_term($post->ID, 'quiz_unit_type');
+                    $output = '<strong>' . $type->name . '</strong>';
+                    if ($type->slug == 'multiple_choice') $output .= ' <em>(' . count(get_post_meta($post->ID, 'mp_lms_quiz_answer')) . ' Answers)</em>';
                     return [
                         'field' => 'Quiz Type',
                         'value' => $output
@@ -111,7 +111,7 @@ class Quizez extends PluginGeneric
         {
             if ($column == 'quiz_units')
             {
-                $units = get_post_meta($post_id, 'mp_lms_quiz_unit', true);
+                $units = get_post_meta($post_id, 'mp_lms_quiz_unit');
                 echo count($units);
             }
         });

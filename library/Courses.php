@@ -61,9 +61,9 @@ class Courses extends PluginGeneric
             ->setDisplay([
                 '<div id="' . $this->prefix . '_lesson_quiz_list"></div>',
                 ThickBox::register_iframe( 'thickbox_lessons', 'Add Lessons', 'admin-ajax.php',
-                    ['action' => $this->prefix . '_list_lesson'] )->render(),
+                    ['action' => 'list_course_mp_lms_lesson'] )->render(),
                 ThickBox::register_iframe( 'thickbox_quizez', 'Add Quizez', 'admin-ajax.php',
-                    ['action' => $this->prefix . '_list_quiz'] )->render()
+                    ['action' => 'list_course_mp_lms_quiz'] )->render()
             ])
             ->register();
     }
@@ -122,34 +122,21 @@ class Courses extends PluginGeneric
         {
             if ($column == 'duration')
             {
-                $data = get_post_meta($post_id, 'mp_lms_mixed', true);
-                $lessons = array_where($data, function($key, $value)
-                {
-                    return $value['type'] == 'mp_lms_lesson';
-                });
-
+                $lessons = get_post_meta($post_id, 'mp_lms_lesson');
                 $duration = [];
-                foreach($lessons as $lesson_id => $lesson)
+                foreach($lessons as $lesson_id)
                     $duration[] = Date::time_to_seconds(implode(":", get_post_meta($lesson_id, 'duration', true)));
 
                 echo Date::seconds_to_time(array_sum($duration));
             }
             if ($column == 'lessons')
             {
-                $data = get_post_meta($post_id, 'mp_lms_mixed', true);
-                $lessons = array_where($data, function($key, $value)
-                {
-                    return $value['type'] == 'mp_lms_lesson';
-                });
+                $lessons = get_post_meta($post_id, 'mp_lms_lesson');
                 echo count($lessons);
             }
             if ($column == 'quizez')
             {
-                $data = get_post_meta($post_id, 'mp_lms_mixed', true);
-                $quizez = array_where($data, function($key, $value)
-                {
-                    return $value['type'] == 'mp_lms_quiz';
-                });
+                $quizez = get_post_meta($post_id, 'mp_lms_quiz');
                 echo count($quizez);
             }
         });
