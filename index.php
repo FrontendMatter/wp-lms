@@ -37,7 +37,7 @@ add_action('plugins_loaded', function() use ($libraries)
     // Bind the Plugin to the Container
     $app->bindShared('plugin', function()
     {
-        return new Plugin('mp_lms');
+        return new Plugin( __FILE__ );
     });
 
     // Load & Initialize libraries

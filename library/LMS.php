@@ -14,6 +14,7 @@ class LMS extends PluginGeneric
     public function __construct()
     {
         parent::__construct();
+        $this->loadTextDomain();
         $this->admin_menu();
     }
 
