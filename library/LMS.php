@@ -14,7 +14,13 @@ class LMS extends PluginGeneric
     public function __construct()
     {
         parent::__construct();
+
+        // i18n
         $this->loadTextDomain();
+
+        // Load Plugin Templates into the current Theme
+        $this->plugin->initPluginTemplates();
+
         $this->admin_menu();
     }
 
