@@ -44,10 +44,10 @@ class Prerequisites extends PluginGeneric
      */
     private function crud()
     {
-        $relation = 'mp_lms_prerequisite';
+        $relation = $this->getPrefix('prerequisite');
 
         // Courses -> Prerequisites CRUD Relationship
-        CRUD::make($this->prefix, 'course', 'prerequisite')
+        CRUD::make($this->prefix, $this->getPrefix('course'), $relation)
             ->setForm($relation, function($post) { return $this->getForm($post); })
             ->validateForm($relation, function($instance) { return $this->validateForm($instance); })
             ->setFormFields($relation, [])
@@ -56,7 +56,7 @@ class Prerequisites extends PluginGeneric
             ->register();
 
         // Lessons -> Prerequisites CRUD Relationship
-        CRUD::make($this->prefix, 'lesson', 'prerequisite')
+        CRUD::make($this->prefix, $this->getPrefix('lesson'), $relation)
             ->setForm($relation, function($post) { return $this->getForm($post); })
             ->validateForm($relation, function($instance) { return $this->validateForm($instance); })
             ->setFormFields($relation, [])
@@ -64,7 +64,7 @@ class Prerequisites extends PluginGeneric
             ->setListFields($relation, $this->getListFields())
             ->register();
 
-        CRUD::setPostTypeLabel('mp_lms_prerequisite', $this->__('Prerequisite'));
+        CRUD::setPostTypeLabel($this->getPrefix('prerequisite'), $this->__('Prerequisite'));
     }
 
     /**
@@ -100,14 +100,14 @@ class Prerequisites extends PluginGeneric
     {
         // Course -> Prerequisites Meta Box
         MetaBox::make($this->prefix, 'prerequisites', $this->__('Course Prerequisites'))
-            ->setPostType('course')
+            ->setPostType($this->getPrefix('course'))
             ->setFields(['enforce_prerequisites'])
             ->setDisplay([ $this->getTabs() ])
             ->register();
 
         // Lesson -> Prerequisites Meta Box
         MetaBox::make($this->prefix, 'prerequisites', $this->__('Lesson Prerequisites'))
-            ->setPostType('lesson')
+            ->setPostType($this->getPrefix('lesson'))
             ->setFields(['enforce_prerequisites'])
             ->setDisplay([ $this->getTabs() ])
             ->register();
@@ -129,21 +129,19 @@ class Prerequisites extends PluginGeneric
                 ->addNav($html->link('#prerequisites-list-tab', $this->__('Prerequisites'), ['data-toggle' => 'tab']))->isActive()
                 ->addNav($html->link('#prerequisites-settings-tab', $this->__('Settings'), ['data-toggle' => 'tab']));
 
-            $thickbox_post = str_replace("mp_lms_", "", $post->post_type);
-
             $tabs_pane_list = [
-                '<div id="' . $this->prefix . '_prerequisite_list"></div>',
+                CRUD::getListContainer([$this->getPrefix('prerequisite')]),
                 ThickBox::register_iframe( 'thickbox_quizez', $this->__('Assign Prerequisites'), 'admin-ajax.php',
-                    ['action' => 'list_' . $thickbox_post . '_mp_lms_prerequisite'] )->render(),
+                    ['action' => 'list_' . $post->post_type . '_' . $this->getPrefix('prerequisite')] )->render(),
                 ThickBox::register_iframe( 'thickbox_quizez', $this->__('New Prerequisite'), 'admin-ajax.php',
-                    ['action' => 'edit_' . $thickbox_post . '_mp_lms_prerequisite'] )
+                    ['action' => 'edit_' . $post->post_type . '_' . $this->getPrefix('prerequisite')] )
                     ->setButtonAttributes(['class' => 'button thickbox button-primary'])->render()
             ];
 
             $enforce_attributes = [];
-            if ($post->post_type == 'mp_lms_lesson')
+            if ($post->post_type == $this->getPrefix('lesson'))
             {
-                $courses_with_lesson = CRUD::find_connected_with_post($post, 'mp_lms_course');
+                $courses_with_lesson = CRUD::find_connected_with_post($post, $this->getPrefix('course'));
                 if (count($courses_with_lesson) > 0)
                     $enforce_attributes = ['disabled'];
             }
@@ -176,8 +174,8 @@ class Prerequisites extends PluginGeneric
      */
     private function getForm($post)
     {
-        $lessons = FormBuilder::select_values('mp_lms_lesson', $this->__('-- Select a lesson --'));
-        $courses = FormBuilder::select_values('mp_lms_course', $this->__('-- Select a course --'));
+        $lessons = FormBuilder::select_values($this->getPrefix('lesson'), $this->__('-- Select a lesson --'));
+        $courses = FormBuilder::select_values($this->getPrefix('course'), $this->__('-- Select a course --'));
         $prerequisite_types = [ 'url' => $this->__('External URL'), 'lesson' => $this->__('Lesson'), 'course' => $this->__('Course') ];
         if (empty($post))
         {

@@ -1,5 +1,6 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
+use Mosaicpro\Core\IoC;
 use Mosaicpro\WpCore\CRUD;
 use Mosaicpro\WpCore\FormBuilder;
 use Mosaicpro\WpCore\MetaBox;
@@ -9,6 +10,7 @@ use Mosaicpro\WpCore\PostType;
 use Mosaicpro\WpCore\Taxonomy;
 use Mosaicpro\WpCore\ThickBox;
 use Mosaicpro\WpCore\Utility;
+use WP_Query;
 
 /**
  * Class QuizUnits
@@ -22,11 +24,59 @@ class QuizUnits extends PluginGeneric
     public function __construct()
     {
         parent::__construct();
+        $this->initShared();
+        $this->initFront();
+        $this->initAdmin();
+    }
+
+    /**
+     * Initialize QuizUnits Shared Resources
+     */
+    private function initShared()
+    {
         $this->post_types();
         $this->taxonomies();
+    }
+
+    /**
+     * Initialize QuizUnits Admin Resources
+     * @return bool
+     */
+    private function initAdmin()
+    {
+        if (!is_admin()) return false;
+
         $this->metaboxes();
         $this->crud();
         $this->admin_post_list();
+    }
+
+    /**
+     * Initialize QuizUnits Front Resources
+     */
+    private function initFront()
+    {
+        add_action('wp_enqueue_scripts', function()
+        {
+            if (!(is_single() && get_post_type() == $this->getPrefix('quiz_unit'))) return false;
+
+            $quiz_id = isset($_REQUEST['quiz_id']) ? $_REQUEST['quiz_id'] : false;
+            if (!$quiz_id) return false;
+
+            $quiz_timer_enabled = get_post_meta($quiz_id, 'timer_enabled', true);
+            $quiz_timer_limit = get_post_meta($quiz_id, 'timer_limit', true);
+
+            if (empty($quiz_timer_enabled) || empty($quiz_timer_limit) || $quiz_timer_enabled !== 'true') return false;
+
+            wp_enqueue_script( 'jquery-countdown', plugin_dir_url( $this->plugin->getPluginFile() ) . 'assets/jquery-countdown/jquery.countdown.js', ['jquery'], null, true );
+            wp_enqueue_style( 'jquery-countdown', plugin_dir_url( $this->plugin->getPluginFile() ) . 'assets/jquery-countdown/jquery.countdown.css', null, null );
+            wp_enqueue_script( 'mp-lms-quiz-unit', plugin_dir_url( $this->plugin->getPluginFile() ) . 'assets/quiz-unit/timer.js', ['jquery', 'jquery-countdown'], null, true );
+            wp_enqueue_style( 'mp-lms-quiz-unit', plugin_dir_url( $this->plugin->getPluginFile() ) . 'assets/quiz-unit/timer.css', null, null );
+            wp_localize_script('mp-lms-quiz-unit', 'quiz_unit_timer', [
+                'duration' => $quiz_timer_limit,
+                'quiz_id' => $quiz_id
+            ]);
+        });
     }
 
     /**
@@ -44,11 +94,12 @@ class QuizUnits extends PluginGeneric
      */
     public static function taxonomies()
     {
+        $plugin = IoC::getContainer('plugin');
         Taxonomy::make('quiz unit type')
             ->setType('radio')
-            ->setPostType('mp_lms_quiz_unit')
+            ->setPostType($plugin->getPrefix('quiz_unit'))
             ->setOption('update_meta_box', [
-                'label' => PluginGeneric::getInstance()->__('Quiz Unit Type'),
+                'label' => $plugin->__('Quiz Unit Type'),
                 'context' => 'normal',
                 'priority' => 'high'
             ])
@@ -60,29 +111,38 @@ class QuizUnits extends PluginGeneric
      */
     private function metaboxes()
     {
+        // Unit Question Editor
+        add_action('edit_form_after_title', function($post)
+        {
+            if ($post->post_type !== $this->getPrefix('quiz_unit')) return;
+            echo '<h2>' . $this->__('Unit Question') . '</h2>';
+            wp_editor($post->post_content, 'editpost', ['textarea_name' => 'post_content', 'textarea_rows' => 5]);
+            echo "<br/>";
+        });
+
         // Quiz Units -> Multiple Choice -> Quiz Answers Meta Box
         MetaBox::make($this->prefix, 'quiz_answer_multiple_choice', $this->__('Multiple Choice Answers'))
-            ->setPostType('quiz_unit')
+            ->setPostType($this->getPrefix('quiz_unit'))
             ->setDisplay([
-                '<div id="' . $this->prefix . '_quiz_answer_list"></div>',
+                CRUD::getListContainer([$this->getPrefix('quiz_answer')]),
                 ThickBox::register_iframe( 'thickbox_answers', $this->__('Add Answers'), 'admin-ajax.php',
-                    ['action' => 'list_quiz_unit_mp_lms_quiz_answer'] )->render()
+                    ['action' => 'list_' . $this->getPrefix('quiz_unit') . '_' . $this->getPrefix('quiz_answer')] )->render()
             ])
             ->register();
 
         // Quiz Units -> True or False -> Correct Answer Meta Box
         MetaBox::make($this->prefix, 'quiz_answer_true_false', $this->__('True of False Answer'))
-            ->setPostType('quiz_unit')
+            ->setPostType($this->getPrefix('quiz_unit'))
             ->setField('correct_answer_true_false', $this->__('Select the correct answer'), [$this->__('True'), $this->__('False')], 'radio')
             ->register();
 
         // Quiz Units -> One Word -> Correct Answer Meta Box
         MetaBox::make($this->prefix, 'quiz_answer_one_word', $this->__('One Word Correct Answer'))
-            ->setPostType('quiz_unit')
+            ->setPostType($this->getPrefix('quiz_unit'))
             ->setField('correct_answer_one_word', $this->__('Provide the correct answer'), 'input')
             ->setDisplay([
                 'fields',
-                $this->__('<p><strong>Note:</strong> You can provide a list of multiple words or word variations separated with a comma; If you provide a list, then any word from the list will be treated as the correct answer.</p>')
+                $this->__('<p><strong>Note:</strong> This is only required if the Quiz Unit should be auto-evaluated by the system. On manual evaluation by an Instructor, you can skip this option. You can also provide a list of multiple words or word variations separated with a comma; If you provide a list, then any word from the list will be treated as the correct answer.</p>')
             ])
             ->register();
 
@@ -93,8 +153,8 @@ class QuizUnits extends PluginGeneric
             Utility::show_hide([
                     'when' => '#quiz_unit_typechecklist',
                     'is_value' => $type,
-                    'show_target' => '#mp_lms_quiz_answer_' . $type
-                ],['mp_lms_quiz_unit']
+                    'show_target' => '#' . $this->getPrefix('quiz_answer') . '_' . $type
+                ],[$this->getPrefix('quiz_unit')]
             );
         }
     }
@@ -105,19 +165,19 @@ class QuizUnits extends PluginGeneric
     private function crud()
     {
         // Quiz Units -> Quiz Answers CRUD Relationship
-        CRUD::make($this->prefix, 'quiz_unit', 'quiz_answer')
-            ->setListFields('mp_lms_quiz_answer', [
+        CRUD::make($this->prefix, $this->getPrefix('quiz_unit'), $this->getPrefix('quiz_answer'))
+            ->setListFields($this->getPrefix('quiz_answer'), [
                 'ID',
                 'crud_edit_post_title',
                 'yes_no_correct'
             ])
-            ->setForm('mp_lms_quiz_answer', function($post)
+            ->setForm($this->getPrefix('quiz_answer'), function($post)
             {
                 FormBuilder::checkbox('correct', $this->__('The answer is correct'), 1, esc_attr($post->correct) == 1);
             })
             ->register();
 
-        CRUD::setPostTypeLabel('mp_lms_quiz_answer', $this->__('Quiz Answer'));
+        CRUD::setPostTypeLabel($this->getPrefix('quiz_answer'), $this->__('Quiz Answer'));
     }
 
     /**
@@ -126,12 +186,12 @@ class QuizUnits extends PluginGeneric
     private function admin_post_list()
     {
         // Add Quiz Units Listing Custom Columns
-        PostList::add_columns($this->prefix . '_quiz_unit', [
+        PostList::add_columns($this->getPrefix('quiz_unit'), [
             ['type', 'Unit Type', 2]
         ]);
 
         // Display Quiz Units Listing Custom Columns
-        PostList::bind_column($this->prefix . '_quiz_unit', function($column, $post_id)
+        PostList::bind_column($this->getPrefix('quiz_unit'), function($column, $post_id)
         {
             if ($column == 'type')
             {
@@ -139,7 +199,7 @@ class QuizUnits extends PluginGeneric
                 $output = '<strong>' . $type->name . '</strong>';
                 if ($type->slug == 'multiple_choice')
                 {
-                    $answers = count(get_post_meta($post_id, 'mp_lms_quiz_answer'));
+                    $answers = count(get_post_meta($post_id, $this->getPrefix('quiz_answer')));
                     $output .= ' <em>(' . sprintf( $this->__('%1$s Answers'), $answers ) . ')</em>';
                 }
                 echo $output;
@@ -158,5 +218,88 @@ class QuizUnits extends PluginGeneric
         wp_insert_term('Multiple choice','quiz_unit_type', ['slug' => 'multiple_choice']);
         wp_insert_term('True or False','quiz_unit_type', ['slug' => 'true_false']);
         wp_insert_term('One Word Answer','quiz_unit_type', ['slug' => 'one_word']);
+    }
+
+    /**
+     * Get all Quiz Units by $quiz_id
+     * @param $quiz_id
+     * @return WP_Query
+     */
+    public static function get($quiz_id)
+    {
+        $plugin = IoC::getContainer('plugin');
+        $quiz_units = get_post_meta($quiz_id, $plugin->getPrefix('quiz_unit'));
+        $units = new WP_Query([
+            'post_type' => $plugin->getPrefix('quiz_unit'),
+            'post__in' => $quiz_units
+        ]);
+
+        $order = self::get_order($quiz_id);
+        $posts = CRUD::order_sortables($units->posts, $order);
+        $units->posts = $posts;
+
+        wp_reset_postdata();
+        return $units;
+    }
+
+    /**
+     * Get the first Quiz Unit id associated with $quiz_id
+     * @param $quiz_id
+     * @return bool
+     */
+    public static function get_first($quiz_id)
+    {
+        $order = self::get_order($quiz_id);
+        if (empty($order))
+        {
+            $plugin = IoC::getContainer('plugin');
+            $quiz_units = get_post_meta($quiz_id, $plugin->getPrefix('quiz_unit'));
+            if (empty($quiz_units)) return false;
+            return $quiz_units[0];
+        }
+        return $order[0];
+    }
+
+    /**
+     * Get the next Quiz Unit id after $current_unit_id associated with $quiz_id
+     * @param $quiz_id
+     * @param $current_unit_id
+     * @return bool
+     */
+    public static function get_next($quiz_id, $current_unit_id)
+    {
+        $order = self::get_order($quiz_id);
+        $current_key = array_search($current_unit_id, $order);
+        if (!isset($order[$current_key])) return false;
+        if (!isset($order[$current_key+1])) return false;
+        return $order[$current_key+1];
+    }
+
+    /**
+     * Get the previous Quiz Unit id before $current_unit_id associated with $quiz_id
+     * @param $quiz_id
+     * @param $current_unit_id
+     * @return bool
+     */
+    public static function get_prev($quiz_id, $current_unit_id)
+    {
+        $order = self::get_order($quiz_id);
+        $current_key = array_search($current_unit_id, $order);
+        if (!isset($order[$current_key])) return false;
+        if (!isset($order[$current_key-1])) return false;
+        return $order[$current_key-1];
+    }
+
+    /**
+     * Get the order of Quiz Units associated with $quiz_id
+     * @param $quiz_id
+     * @return mixed
+     */
+    public static function get_order($quiz_id)
+    {
+        $plugin = IoC::getContainer('plugin');
+        $order_key = '_order_' . $plugin->getPrefix('quiz_unit');
+        $order = get_post_meta($quiz_id, $order_key, true);
+        return !empty($order) ? $order : get_post_meta($quiz_id, $plugin->getPrefix('quiz_unit'));
     }
 }

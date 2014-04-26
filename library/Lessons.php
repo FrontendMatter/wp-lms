@@ -43,7 +43,7 @@ class Lessons extends PluginGeneric
     {
         // Lessons -> Attributes Meta Box
         MetaBox::make($this->prefix, 'lesson_attributes', $this->__('Lesson Attributes'))
-            ->setPostType('lesson')
+            ->setPostType($this->getPrefix('lesson'))
             ->setContext('side')
             ->setField('duration', $this->__('Duration (hh:mm:ss)'), 'select_hhmmss')
             ->register();
@@ -55,14 +55,14 @@ class Lessons extends PluginGeneric
     private function admin_post_list()
     {
         // Add Lessons Listing Custom Columns
-        PostList::add_columns($this->prefix . '_lesson', [
+        PostList::add_columns($this->getPrefix('lesson'), [
             ['thumbnail', $this->__('Thumbnail'), 1],
             ['duration_format', $this->__('Duration'), 3],
             ['author', $this->__('Instructor'), 4]
         ]);
 
         // Display Lessons Listing Custom Columns
-        PostList::bind_column($this->prefix . '_lesson', function($column, $post_id)
+        PostList::bind_column($this->getPrefix('lesson'), function($column, $post_id)
         {
             if ($column == 'duration_format')
             {

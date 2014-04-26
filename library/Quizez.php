@@ -44,28 +44,28 @@ class Quizez extends PluginGeneric
     {
         // Quiz -> Quiz Units Meta Box
         MetaBox::make($this->prefix, 'quiz_unit', $this->__('Quiz Units'))
-            ->setPostType('quiz')
+            ->setPostType($this->getPrefix('quiz'))
             ->setDisplay([
-                '<div id="' . $this->prefix . '_quiz_unit_list"></div>',
+                CRUD::getListContainer([$this->getPrefix('quiz_unit')]),
                 ThickBox::register_iframe( 'thickbox_units', $this->__('Add Unit to Quiz'), 'admin-ajax.php',
-                    ['action' => 'list_quiz_mp_lms_quiz_unit'] )->render()
+                    ['action' => 'list_' . $this->getPrefix('quiz') . '_' . $this->getPrefix('quiz_unit')] )->render()
             ])
             ->register();
 
         // Quiz -> Timer Meta Box
         MetaBox::make($this->prefix, 'quiz_timer', $this->__('Quiz Timer'))
-            ->setPostType('quiz')
+            ->setPostType($this->getPrefix('quiz'))
             ->setField('timer_enabled', $this->__('Enable/Disable the Quiz Timer'), ['true' => $this->__('On'), 'false' => $this->__('Off')], 'radio')
             ->setField('timer_limit', $this->__('Set the timer limit (hh:mm:ss)'), 'select_hhmmss')
             ->register();
 
         // Only show the Quiz Timer Limit if the Quiz Timer is enabled
         Utility::show_hide([
-                'when' => '#mp_lms_quiz_timer',
+                'when' => '#' . $this->getPrefix('quiz_timer'),
                 'attribute' => 'value',
                 'is_value' => 'true',
-                'show_target' => '#mp_lms_quiz_timer .form-group'
-            ],['mp_lms_quiz']
+                'show_target' => '#' . $this->getPrefix('quiz_timer') . ' .form-group'
+            ],[$this->getPrefix('quiz')]
         );
     }
 
@@ -75,8 +75,8 @@ class Quizez extends PluginGeneric
     private function crud()
     {
         // Quizez -> Quiz Units CRUD Relationship
-        CRUD::make($this->prefix, 'quiz', 'quiz_unit')
-            ->setListFields('mp_lms_quiz_unit', [
+        CRUD::make($this->prefix, $this->getPrefix('quiz'), $this->getPrefix('quiz_unit'))
+            ->setListFields($this->getPrefix('quiz_unit'), [
                 'ID',
                 'post_title',
                 function($post)
@@ -84,7 +84,7 @@ class Quizez extends PluginGeneric
                     $type = Taxonomy::get_term($post->ID, 'quiz_unit_type');
                     $output = '<strong>' . $type->name . '</strong>';
                     if ($type->slug == 'multiple_choice') {
-                        $answers = count(get_post_meta($post->ID, 'mp_lms_quiz_answer'));
+                        $answers = count(get_post_meta($post->ID, $this->getPrefix('quiz_answer')));
                         $output .= ' <em>(' . sprintf( $this->__('%1$s Answers'), $answers ) . ')</em>';
                     }
                     return [
@@ -95,8 +95,8 @@ class Quizez extends PluginGeneric
             ])
             ->register();
 
-        CRUD::setPostTypeLabel('mp_lms_quiz', $this->__('Quiz'));
-        CRUD::setPostTypeLabel('mp_lms_quiz_unit', $this->__('Quiz Unit'));
+        CRUD::setPostTypeLabel($this->getPrefix('quiz'), $this->__('Quiz'));
+        CRUD::setPostTypeLabel($this->getPrefix('quiz_unit'), $this->__('Quiz Unit'));
     }
 
     /**
@@ -105,16 +105,16 @@ class Quizez extends PluginGeneric
     private function admin_post_list()
     {
         // Add Quizez Listing Custom Columns
-        PostList::add_columns($this->prefix . '_quiz', [
+        PostList::add_columns($this->getPrefix('quiz'), [
             ['quiz_units', $this->__('Quiz Units'), 2]
         ]);
 
         // Display Quizez Listing Custom Columns
-        PostList::bind_column($this->prefix . '_quiz', function($column, $post_id)
+        PostList::bind_column($this->getPrefix('quiz'), function($column, $post_id)
         {
             if ($column == 'quiz_units')
             {
-                $units = get_post_meta($post_id, 'mp_lms_quiz_unit');
+                $units = get_post_meta($post_id, $this->getPrefix('quiz_unit'));
                 echo count($units) . ' ' . $this->__('Quiz Units');
             }
         });

@@ -1,5 +1,7 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
+use Mosaicpro\Core\IoC;
+use Mosaicpro\WpCore\CRUD;
 use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;
 use Mosaicpro\WpCore\PostType;
@@ -16,7 +18,25 @@ class QuizAnswers extends PluginGeneric
     public function __construct()
     {
         parent::__construct();
+        $this->initShared();
+        $this->initAdmin();
+    }
+
+    /**
+     * Initialize QuizAnswers Shared Resources
+     */
+    private function initShared()
+    {
         $this->post_types();
+    }
+
+    /**
+     * Initialize QuizAnswers Admin
+     * @return bool
+     */
+    private function initAdmin()
+    {
+        if (!is_admin()) return false;
         $this->metaboxes();
     }
 
@@ -37,8 +57,41 @@ class QuizAnswers extends PluginGeneric
     {
         // Quiz Answer Attributes
         MetaBox::make($this->prefix, 'quiz_answer_attributes', $this->__('Answer Attributes'))
-            ->setPostType('quiz_answer')
+            ->setPostType($this->getPrefix('quiz_answer'))
             ->setField('correct', $this->__('The answer is correct'), 'checkbox')
             ->register();
+    }
+
+    /**
+     * Get all Quiz Answers by $quiz_unit_id
+     * @param $quiz_unit_id
+     * @return array
+     */
+    public static function get($quiz_unit_id)
+    {
+        $plugin = IoC::getContainer('plugin');
+        $quiz_answers = get_post_meta($quiz_unit_id, $plugin->getPrefix('quiz_answer'));
+        $answers = get_posts([
+            'post_type' => [$plugin->getPrefix('quiz_answer')],
+            'post__in' => $quiz_answers
+        ]);
+
+        $order = self::get_order($quiz_unit_id);
+        $answers = CRUD::order_sortables($answers, $order);
+
+        return $answers;
+    }
+
+    /**
+     * Get the order of Quiz Answers associated with $quiz_unit_id
+     * @param $quiz_unit_id
+     * @return mixed
+     */
+    public static function get_order($quiz_unit_id)
+    {
+        $plugin = IoC::getContainer('plugin');
+        $order_key = '_order_' . $plugin->getPrefix('quiz_answer');
+        $order = get_post_meta($quiz_unit_id, $order_key, true);
+        return !empty($order) ? $order : get_post_meta($quiz_unit_id, $plugin->getPrefix('quiz_answer'));
     }
 } 

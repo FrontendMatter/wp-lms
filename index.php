@@ -22,6 +22,7 @@ $libraries = [
     'Courses',
     'Lessons',
     'Prerequisites',
+    'Attachments',
     'Quizez',
     'QuizUnits',
     'QuizAnswers',
@@ -43,7 +44,7 @@ add_action('plugins_loaded', function() use ($libraries)
     // Load & Initialize libraries
     foreach ($libraries as $library)
     {
-        require_once 'library/' . $library . '.php';
+        require_once dirname(__FILE__) . '/library/' . $library . '.php';
         forward_static_call_array([ __NAMESPACE__ . '\\' . $library, 'init' ], []);
     }
 });
@@ -56,7 +57,7 @@ register_activation_hook(__FILE__, function() use ($libraries)
 
     foreach ($libraries as $library)
     {
-        require 'library/' . $library . '.php';
+        require dirname(__FILE__) . '/library/' . $library . '.php';
         forward_static_call_array([ __NAMESPACE__ . '\\' . $library, 'activate' ], []);
     }
 });

@@ -120,6 +120,6 @@ module.exports = function(grunt) {
 
     grunt.registerTask( 'i18n', ['pot', 'po2mo'] );
 
-    grunt.registerTask( 'build', ['i18n', 'clean', 'copy', 'compress'] );
+    grunt.registerTask( 'build', ['docs', 'i18n', 'clean', 'copy', 'compress'] );
 
 }
