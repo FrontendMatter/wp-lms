@@ -26,6 +26,7 @@ $libraries = [
     'Quizez',
     'QuizUnits',
     'QuizAnswers',
+    'QuizResults',
     'Settings'
 ];
 

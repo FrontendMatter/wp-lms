@@ -21,6 +21,13 @@ class LMS extends PluginGeneric
         // Load Plugin Templates into the current Theme
         $this->plugin->initPluginTemplates();
 
+        // initialize admin resources
+        $this->initAdmin();
+    }
+
+    private function initAdmin()
+    {
+        if (!is_admin()) return false;
         $this->admin_menu();
     }
 
@@ -32,7 +39,6 @@ class LMS extends PluginGeneric
         add_action('admin_menu', function()
         {
             add_menu_page($this->__('Learning Management System'), $this->__('LMS'), 'edit_posts', $this->prefix, '', admin_url() . 'images/media-button-video.gif', 27);
-            add_submenu_page( $this->prefix, $this->__('Quiz Results'), $this->__('Quiz Results'), 'edit_posts', 'quiz_results', [$this, 'admin_page_quiz_results']);
             add_submenu_page( $this->prefix, $this->__('Topics'), $this->__('Topics'), 'edit_posts', 'edit-tags.php?taxonomy=topic');
         });
 
