@@ -19,16 +19,77 @@ use WP_Query;
 class Courses extends PluginGeneric
 {
     /**
+     * Holds a Courses instance
+     * @var
+     */
+    protected static $instance;
+
+    /**
+     * Holds the Quizzes dependency
+     * @var bool|mixed
+     */
+    protected $quizzes;
+
+    /**
      * Create a new Courses instance
      */
     public function __construct()
     {
         parent::__construct();
-        $this->post_types();
-        $this->taxonomies();
+        $this->quizzes = is_plugin_active('mp-quiz/index.php') ? IoC::getContainer('quizzes') : false;
+    }
+
+    /**
+     * Get a Courses Singleton instance
+     * @return static
+     */
+    public static function getInstance()
+    {
+        if (is_null(self::$instance))
+        {
+            self::$instance = new static();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Provide access to the Quizzes dependency outside of this class
+     * @return bool|mixed
+     */
+    public function getQuizzes()
+    {
+        return $this->quizzes;
+    }
+
+    /**
+     * Initialize the Courses plugin
+     */
+    public static function init()
+    {
+        $instance = self::getInstance();
+        $instance->initAdmin();
+        $instance->initShared();
+    }
+
+    /**
+     * Initialize the Admin Resources
+     * @return bool
+     */
+    private function initAdmin()
+    {
+        if (!is_admin()) return false;
         $this->metaboxes();
         $this->crud();
         $this->admin_post_list();
+    }
+
+    /**
+     * Initialize the Shared Resources
+     */
+    private function initShared()
+    {
+        $this->post_types();
+        $this->taxonomies();
     }
 
     /**
@@ -66,17 +127,32 @@ class Courses extends PluginGeneric
             echo "<br/>";
         });
 
-        // Course -> Lessons Meta Box
-        MetaBox::make($this->prefix, 'lesson_quiz', $this->__('Course Lessons'))
+        // Course -> Curriculum Meta Box
+        MetaBox::make($this->prefix, 'curriculum', $this->__('Course Curriculum'))
             ->setPostType($this->getPrefix('course'))
-            ->setDisplay([
-                CRUD::getListContainer([$this->getPrefix('lesson'), $this->getPrefix('quiz')]),
-                ThickBox::register_iframe( 'thickbox_lessons', $this->__('Add Lessons'), 'admin-ajax.php',
-                    ['action' => 'list_' . $this->getPrefix('course') . '_' . $this->getPrefix('lesson')] )->render(),
-                ThickBox::register_iframe( 'thickbox_quizez', $this->__('Add Quizez'), 'admin-ajax.php',
-                    ['action' => 'list_' . $this->getPrefix('course') . '_' . $this->getPrefix('quiz')] )->render()
-            ])
+            ->setDisplay($this->getCurriculumMetaboxDisplay())
             ->register();
+    }
+
+    /**
+     * @return array
+     */
+    private function getCurriculumMetaboxDisplay()
+    {
+        $curriculum_related = [$this->getPrefix('lesson')];
+        if ($this->quizzes)
+            $curriculum_related[] = $this->quizzes->getPrefix('quiz');
+
+        $display = [
+            CRUD::getListContainer($curriculum_related),
+            ThickBox::register_iframe( 'thickbox_lessons', $this->__('Add Lessons'), 'admin-ajax.php',
+                ['action' => 'list_' . $this->getPrefix('course') . '_' . $this->getPrefix('lesson')] )->render()
+        ];
+        if ($this->quizzes)
+            $display[] = ThickBox::register_iframe( 'thickbox_quizez', $this->__('Add Quizzes'), 'admin-ajax.php',
+                ['action' => 'list_' . $this->getPrefix('course') . '_' . $this->quizzes->getPrefix('quiz')] )->render();
+
+        return $display;
     }
 
     /**
@@ -84,8 +160,12 @@ class Courses extends PluginGeneric
      */
     private function crud()
     {
+        $curriculum_related = [$this->getPrefix('lesson')];
+        if ($this->quizzes)
+            $curriculum_related[] = $this->quizzes->getPrefix('quiz');
+
         // Courses -> Lessons & Quiz Mixed CRUD Relationship
-        CRUD::make($this->prefix, $this->getPrefix('course'), [$this->getPrefix('lesson'), $this->getPrefix('quiz')])
+        $curriculum_crud = CRUD::make($this->prefix, $this->getPrefix('course'), $curriculum_related)
             ->setListFields($this->getPrefix('lesson'), [
                 'ID',
                 'post_thumbnail',
@@ -100,16 +180,25 @@ class Courses extends PluginGeneric
                     ];
                 }
             ])
-            ->setListFields($this->getPrefix('quiz'), [
+            ->setForm($this->getPrefix('lesson'), function($post)
+            {
+                FormBuilder::select_hhmmss('duration', $this->__('Duration'), $post->duration);
+            });
+
+        if ($this->quizzes)
+        {
+            $curriculum_crud->setListFields($this->getPrefix('quiz'), [
                 'ID',
                 'post_title',
                 'count_' . $this->getPrefix('quiz_unit')
             ])
-            ->setForm($this->getPrefix('lesson'), function($post)
+            ->setForm($this->getPrefix('quiz'), function($post)
             {
-                FormBuilder::select_hhmmss('duration', $this->__('Duration'), $post->duration);
-            })
-            ->register();
+                FormBuilder::input('score_max', $this->__('Max. Score'), $post->score_max);
+            });
+        }
+
+        $curriculum_crud->register();
 
         CRUD::setPostTypeLabel($this->getPrefix('lesson'), $this->__('Lesson'));
     }
@@ -119,14 +208,18 @@ class Courses extends PluginGeneric
      */
     private function admin_post_list()
     {
-        // Add Courses Listing Custom Columns
-        PostList::add_columns($this->getPrefix('course'), [
+        $columns = [
             ['thumbnail', $this->__('Thumbnail'), 1],
             ['lessons', $this->__('Lessons'), 3],
-            ['quizez', $this->__('Quizez'), 4],
-            ['duration', $this->__('Duration'), 5],
-            ['author', $this->__('Instructor'), 6]
-        ]);
+            ['duration', $this->__('Duration'), 4],
+            ['author', $this->__('Instructor'), 4]
+        ];
+
+        if ($this->quizzes)
+            $columns[] = ['quizzes', $this->__('Quizzes'), 4];
+
+        // Add Courses Listing Custom Columns
+        PostList::add_columns($this->getPrefix('course'), $columns);
 
         // Display Courses Listing Custom Columns
         PostList::bind_column($this->getPrefix('course'), function($column, $post_id)
@@ -139,9 +232,9 @@ class Courses extends PluginGeneric
                 $lessons = get_post_meta($post_id, $this->getPrefix('lesson'));
                 echo count($lessons);
             }
-            if ($column == 'quizez')
+            if ($column == 'quizzes')
             {
-                $quizez = get_post_meta($post_id, $this->getPrefix('quiz'));
+                $quizez = get_post_meta($post_id, $this->quizzes->getPrefix('quiz'));
                 echo count($quizez);
             }
         });
@@ -167,10 +260,11 @@ class Courses extends PluginGeneric
      * @param $course_id
      * @return WP_Query
      */
-    public static function get_curriculum($course_id)
+    public function get_curriculum($course_id)
     {
-        $plugin = IoC::getContainer('plugin');
-        $related_types = [$plugin->getPrefix('lesson'), $plugin->getPrefix('quiz')];
+        $related_types = [$this->getPrefix('lesson')];
+        if ($this->quizzes) $related_types[] = $this->quizzes->getPrefix('quiz');
+
         $list = [];
         foreach ($related_types as $related_type)
         {
@@ -188,7 +282,9 @@ class Courses extends PluginGeneric
 
         $related_posts = new WP_Query($related_posts_args);
 
-        $order_key = '_order_' . $plugin->getPrefix('lesson') . '_' . $plugin->getPrefix('quiz');
+        $order_key = '_order_' . $this->getPrefix('lesson');
+        if ($this->quizzes) $order_key .=  '_' . $this->quizzes->getPrefix('quiz');
+
         $order = get_post_meta($course_id, $order_key, true);
         $posts = CRUD::order_sortables($related_posts->posts, $order);
         $related_posts->posts = $posts;

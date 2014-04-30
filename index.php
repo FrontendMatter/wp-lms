@@ -1,9 +1,9 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
 /*
-Plugin Name: LMS
+Plugin Name: MP LMS
 Plugin URI: http://mosaicpro.biz
-Description: Learning Management System with Courses, Quizes, WooCommerce, BuddyPress and bbPress integrations.
+Description: Learning Management System with Programs, Classes, Courses, Quizzes, WooCommerce, BuddyPress and bbPress integrations and more.
 Version: 1.0
 Author: MosaicPro
 Author URI: http://mosaicpro.biz
@@ -23,12 +23,11 @@ $libraries = [
     'Lessons',
     'Prerequisites',
     'Attachments',
-    'Quizez',
-    'QuizUnits',
-    'QuizAnswers',
-    'QuizResults',
     'Settings'
 ];
+
+// load is_plugin_active helper from the admin
+include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
 // Plugin initialization
 add_action('plugins_loaded', function() use ($libraries)
@@ -42,13 +41,14 @@ add_action('plugins_loaded', function() use ($libraries)
         return new Plugin( __FILE__ );
     });
 
-    // Load & Initialize libraries
+    // Load libraries
     foreach ($libraries as $library)
-    {
         require_once dirname(__FILE__) . '/library/' . $library . '.php';
+
+    // Initialize libraries
+    foreach ($libraries as $library)
         forward_static_call_array([ __NAMESPACE__ . '\\' . $library, 'init' ], []);
-    }
-});
+}, 11);
 
 // Plugin activation
 register_activation_hook(__FILE__, function() use ($libraries)
@@ -57,8 +57,8 @@ register_activation_hook(__FILE__, function() use ($libraries)
     defined('MP_PLUGIN_ACTIVATING') || define('MP_PLUGIN_ACTIVATING', true);
 
     foreach ($libraries as $library)
-    {
-        require dirname(__FILE__) . '/library/' . $library . '.php';
+        require_once dirname(__FILE__) . '/library/' . $library . '.php';
+
+    foreach ($libraries as $library)
         forward_static_call_array([ __NAMESPACE__ . '\\' . $library, 'activate' ], []);
-    }
 });

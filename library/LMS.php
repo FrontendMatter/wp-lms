@@ -38,7 +38,7 @@ class LMS extends PluginGeneric
     {
         add_action('admin_menu', function()
         {
-            add_menu_page($this->__('Learning Management System'), $this->__('LMS'), 'edit_posts', $this->prefix, '', admin_url() . 'images/media-button-video.gif', 27);
+            add_menu_page($this->__('Learning Management System'), $this->__('LMS'), 'edit_posts', $this->prefix, '', admin_url() . 'images/media-button-video.gif', '27.001');
             add_submenu_page( $this->prefix, $this->__('Topics'), $this->__('Topics'), 'edit_posts', 'edit-tags.php?taxonomy=topic');
         });
 

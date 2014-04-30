@@ -86,7 +86,7 @@ module.exports = function(grunt) {
                 ]
             },
             files:{
-                src:  [ 'library/*.php' ],
+                src:  [ 'library/*.php', 'templates/*.php' ],
                 expand: true
             }
         },

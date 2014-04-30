@@ -1,6 +1,6 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
-use Mosaicpro\WP\Plugins\Attachments\Attachments as MP_Attachments;
+use Mosaicpro\Core\IoC;
 use Mosaicpro\WpCore\PluginGeneric;
 
 /**
@@ -10,12 +10,46 @@ use Mosaicpro\WpCore\PluginGeneric;
 class Attachments extends PluginGeneric
 {
     /**
+     * Holds an Attachments instance
+     * @var
+     */
+    protected static $instance;
+
+    /**
+     * Holds the Attachments dependency
+     * @var bool|mixed
+     */
+    protected $attachments;
+
+    /**
      * Create a new Attachments instance
      */
     public function __construct()
     {
         parent::__construct();
-        $this->initAdmin();
+        $this->attachments = is_plugin_active('mp-attachments/index.php') ? IoC::getContainer('attachments') : false;
+    }
+
+    /**
+     * Get an Attachments Singleton instance
+     * @return static
+     */
+    public static function getInstance()
+    {
+        if (is_null(self::$instance))
+        {
+            self::$instance = new static();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Initialize the Attachments plugin
+     */
+    public static function init()
+    {
+        $instance = self::getInstance();
+        $instance->initAdmin();
     }
 
     /**
@@ -26,11 +60,12 @@ class Attachments extends PluginGeneric
     {
         if (!is_admin()) return false;
 
-        $post_types = [
+        $attachments_post_types = [
             $this->getPrefix('course') => $this->__('Course Attachments'),
             $this->getPrefix('lesson') => $this->__('Lesson Attachments')
         ];
 
-        MP_Attachments::getInstance()->register($post_types);
+        if ($this->attachments)
+            $this->attachments->register($attachments_post_types);
     }
 }
