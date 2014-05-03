@@ -67,8 +67,141 @@ class Courses extends PluginGeneric
     public static function init()
     {
         $instance = self::getInstance();
+
+        // Initialize Courses Templates
+        $instance->initTemplates();
+
+        // Initialize Courses Sidebars
+        $instance->initSidebars();
+
+        // Initialize Courses Widgets
+        $instance->initWidgets();
+
+        // Add default sidebar widgets
+        $instance->initSidebarWidgets();
+
+        // Initialize Admin
         $instance->initAdmin();
+
+        // Initialize Shared Resources
         $instance->initShared();
+    }
+
+    /**
+     * Activate Courses plugin
+     */
+    public static function activate()
+    {
+        $instance = self::getInstance();
+        $instance->post_types();
+        flush_rewrite_rules();
+    }
+
+    /**
+     * Initialize Courses Templates
+     */
+    private function initTemplates()
+    {
+        // Set Custom page templates
+        $this->plugin->setPageTemplates([
+            'single-' . $this->getPrefix('course') . '-full_width.php' => $this->__('Single Course Full Width'),
+            'single-' . $this->getPrefix('course') . '-sidebar_left.php' => $this->__('Single Course Left Sidebar'),
+            'single-' . $this->getPrefix('course') . '-sidebar_right.php' => $this->__('Single Course Right Sidebar')
+        ]);
+
+        // Display Custom page templates in WP Admin Post screen
+        $this->plugin->initPostTemplates($this->getPrefix('course'));
+    }
+
+    /**
+     * Initialize Courses Sidebars
+     */
+    private function initSidebars()
+    {
+        add_action('widgets_init', function()
+        {
+            register_sidebar([
+                'name'          => $this->__( 'Single Course Sidebar' ),
+                'id'            => 'single-course-sidebar',
+                'description'   => $this->__('Sidebar or Widget Area used on the single Course pages'),
+                'before_widget' => '<div id="%1$s" class="widget %2$s">',
+                'after_widget'  => '</div><hr/>',
+                'before_title'  => '<h4 class="widgettitle">',
+                'after_title'   => '</h4>',
+            ]);
+
+            register_sidebar([
+                'name'          => $this->__( 'Single Lesson Sidebar' ),
+                'id'            => 'single-lesson-sidebar',
+                'description'   => $this->__('Sidebar or Widget Area used on the single Lesson pages'),
+                'before_widget' => '<div id="%1$s" class="widget %2$s">',
+                'after_widget'  => '</div><hr/>',
+                'before_title'  => '<h4 class="widgettitle">',
+                'after_title'   => '</h4>',
+            ]);
+        });
+    }
+
+    /**
+     * Initialize Courses Widgets
+     */
+    private function initWidgets()
+    {
+        add_action('widgets_init', function()
+        {
+            $widgets = [
+                'Curriculum',
+                'Course_Information',
+                'Instructor',
+                'Download_Attachments'
+            ];
+
+            foreach ($widgets as $widget)
+            {
+                require_once realpath(__DIR__) . '/Widgets/' . $widget . '.php';
+                register_widget(__NAMESPACE__ . '\\' . $widget . '_Widget');
+            }
+        });
+    }
+
+    /**
+     * Init default sidebar widgets
+     * @todo: Should be runned once, maybe at plugin activation or directly from the theme;
+     */
+    private function initSidebarWidgets()
+    {
+        add_action('widgets_init', function()
+        {
+            $sidebars = [
+                'single-course-sidebar' => [
+                    'Course_Information_Widget',
+                    'Download_Attachments_Widget',
+                    'Instructor_Widget'
+                ],
+                'single-lesson-sidebar' => [
+                    'Course_Information_Widget',
+                    'Download_Attachments_Widget',
+                    'Instructor_Widget'
+                ]
+            ];
+
+            $active_widgets = get_option( 'sidebars_widgets' );
+            foreach($sidebars as $sidebar => $widgets)
+            {
+                if ( ! empty ( $active_widgets[ $sidebar ] )) continue;
+                $counter = 1;
+
+                foreach ($widgets as $widget)
+                {
+                    $active_widgets[$sidebar][] = strtolower($widget) . '-' . $counter;
+                    // update widget options
+                    // $widget_content[$counter] = ['title' => 'Custom title'];
+                    // update_option('widget_' . strtolower($widget), $widget_content);
+                }
+            }
+
+            update_option( 'sidebars_widgets', $active_widgets );
+        });
     }
 
     /**

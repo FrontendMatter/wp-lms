@@ -23,6 +23,7 @@ $libraries = [
     'Lessons',
     'Prerequisites',
     'Attachments',
+    'Reviews',
     'Settings'
 ];
 

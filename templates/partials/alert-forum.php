@@ -1,14 +1,16 @@
 <?php
 use Mosaicpro\Alert\Alert;
 use Mosaicpro\Button\Button;
+use Mosaicpro\WP\Plugins\LMS\Courses;
 
+$courses = Courses::getInstance();
 $post_type = get_post_type();
-$button_text = 'Course Forum';
-$alert_text = 'Discuss this course in our forum!';
-if ($post_type == 'mp_lms_lesson')
+$button_text = $courses->__('Course Forum');
+$alert_text = $courses->__('Discuss this course in our forum!');
+if ($post_type == $courses->getPrefix('lesson'))
 {
-    $button_text = 'Lesson Forum';
-    $alert_text = 'Discuss this lesson in our forum!';
+    $button_text = $courses->__('Lesson Forum');
+    $alert_text = $courses->__('Discuss this lesson in our forum!');
 }
 
 echo Alert::make()
