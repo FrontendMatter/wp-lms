@@ -45,24 +45,24 @@ class Prerequisites extends PluginGeneric
     private function crud()
     {
         $relation = $this->getPrefix('prerequisite');
+        $post_types = [
+            $this->getPrefix('course') => $this->__('Course'),
+            $this->getPrefix('lesson') => $this->__('Lesson')
+        ];
 
-        // Courses -> Prerequisites CRUD Relationship
-        CRUD::make($this->prefix, $this->getPrefix('course'), $relation)
-            ->setForm($relation, function($post) { return $this->getForm($post); })
-            ->validateForm($relation, function($instance) { return $this->validateForm($instance); })
-            ->setFormFields($relation, [])
-            ->setFormButtons($relation, ['save'])
-            ->setListFields($relation, $this->getListFields())
-            ->register();
+        foreach ($post_types as $post_type => $label)
+        {
+            // Courses -> Prerequisites CRUD Relationship
+            CRUD::make($this->prefix, $post_type, $relation)
+                ->setForm($relation, function($post) { return $this->getForm($post); })
+                ->validateForm($relation, function($instance) { return $this->validateForm($instance); })
+                ->setFormFields($relation, [])
+                ->setFormButtons($relation, ['save'])
+                ->setListFields($relation, $this->getListFields())
+                ->register();
 
-        // Lessons -> Prerequisites CRUD Relationship
-        CRUD::make($this->prefix, $this->getPrefix('lesson'), $relation)
-            ->setForm($relation, function($post) { return $this->getForm($post); })
-            ->validateForm($relation, function($instance) { return $this->validateForm($instance); })
-            ->setFormFields($relation, [])
-            ->setFormButtons($relation, ['save'])
-            ->setListFields($relation, $this->getListFields())
-            ->register();
+            CRUD::setPostTypeLabel($post_type, $label);
+        }
 
         CRUD::setPostTypeLabel($this->getPrefix('prerequisite'), $this->__('Prerequisite'));
     }
@@ -98,19 +98,20 @@ class Prerequisites extends PluginGeneric
      */
     private function metaboxes()
     {
-        // Course -> Prerequisites Meta Box
-        MetaBox::make($this->prefix, 'prerequisites', $this->__('Course Prerequisites'))
-            ->setPostType($this->getPrefix('course'))
-            ->setFields(['enforce_prerequisites'])
-            ->setDisplay([ $this->getTabs() ])
-            ->register();
+        $post_types = [
+            $this->getPrefix('course') => $this->__('Course Prerequisites'),
+            $this->getPrefix('lesson') => $this->__('Lesson Prerequisites')
+        ];
 
-        // Lesson -> Prerequisites Meta Box
-        MetaBox::make($this->prefix, 'prerequisites', $this->__('Lesson Prerequisites'))
-            ->setPostType($this->getPrefix('lesson'))
-            ->setFields(['enforce_prerequisites'])
-            ->setDisplay([ $this->getTabs() ])
-            ->register();
+        foreach ($post_types as $post_type => $label)
+        {
+            // Course -> Prerequisites Meta Box
+            MetaBox::make($this->prefix, 'prerequisites', $label)
+                ->setPostType($post_type)
+                ->setFields(['enforce_prerequisites'])
+                ->setDisplay([ $this->getTabs() ])
+                ->register();
+        }
     }
 
     /**

@@ -18,7 +18,8 @@ echo Media::make()
 
 <?php get_template_part($courses->getPrefix(), 'alert-forum'); ?>
 
-<?php the_widget(
-    'Mosaicpro\WP\Plugins\LMS\Curriculum_Widget',
-    ['before_title' => '<h4 class="widgettitle">', 'after_title' => '</h4>']
-); ?>
+<?php if ( is_active_sidebar( 'single-course-content' ) ) : ?>
+
+    <?php dynamic_sidebar( 'single-course-content' ); ?>
+
+<?php endif; ?>

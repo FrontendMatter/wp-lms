@@ -78,7 +78,7 @@ class Courses extends PluginGeneric
         $instance->initWidgets();
 
         // Add default sidebar widgets
-        $instance->initSidebarWidgets();
+        // $instance->initSidebarWidgets();
 
         // Initialize Admin
         $instance->initAdmin();
@@ -123,7 +123,7 @@ class Courses extends PluginGeneric
             register_sidebar([
                 'name'          => $this->__( 'Single Course Sidebar' ),
                 'id'            => 'single-course-sidebar',
-                'description'   => $this->__('Sidebar or Widget Area used on the single Course pages'),
+                'description'   => $this->__('Sidebar or Widget Area used on the single Course page'),
                 'before_widget' => '<div id="%1$s" class="widget %2$s">',
                 'after_widget'  => '</div><hr/>',
                 'before_title'  => '<h4 class="widgettitle">',
@@ -131,9 +131,9 @@ class Courses extends PluginGeneric
             ]);
 
             register_sidebar([
-                'name'          => $this->__( 'Single Lesson Sidebar' ),
-                'id'            => 'single-lesson-sidebar',
-                'description'   => $this->__('Sidebar or Widget Area used on the single Lesson pages'),
+                'name'          => $this->__( 'Single Course Content' ),
+                'id'            => 'single-course-content',
+                'description'   => $this->__('Widget Area used on the single Course page for displaying widgets within the context of course content.'),
                 'before_widget' => '<div id="%1$s" class="widget %2$s">',
                 'after_widget'  => '</div><hr/>',
                 'before_title'  => '<h4 class="widgettitle">',
@@ -152,8 +152,7 @@ class Courses extends PluginGeneric
             $widgets = [
                 'Curriculum',
                 'Course_Information',
-                'Instructor',
-                'Download_Attachments'
+                'Instructor'
             ];
 
             foreach ($widgets as $widget)
@@ -182,6 +181,9 @@ class Courses extends PluginGeneric
                     'Course_Information_Widget',
                     'Download_Attachments_Widget',
                     'Instructor_Widget'
+                ],
+                'single-course-content' => [
+                    'Curriculum_Widget'
                 ]
             ];
 

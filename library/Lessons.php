@@ -1,5 +1,6 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
+use Mosaicpro\WpCore\CRUD;
 use Mosaicpro\WpCore\Date;
 use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;
@@ -13,14 +14,116 @@ use Mosaicpro\WpCore\PostType;
 class Lessons extends PluginGeneric
 {
     /**
-     * Create a new Lessons instance
+     * Holds a Lessons instance
+     * @var
      */
-    public function __construct()
+    protected static $instance;
+
+    /**
+     * Create a Lessons Singleton instance
+     * @return static
+     */
+    public static function getInstance()
     {
-        parent::__construct();
-        $this->post_types();
+        if (is_null(self::$instance))
+        {
+            self::$instance = new static();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Initialize the Lessons Plugin
+     */
+    public static function init()
+    {
+        $instance = self::getInstance();
+
+        // add lessons custom templates
+        $instance->initTemplates();
+
+        // initialize lessons sidebars
+        $instance->initSidebars();
+
+        // initialize lessons admin
+        $instance->initAdmin();
+
+        // initialize lessons shared resources
+        $instance->initShared();
+    }
+
+    /**
+     * Activate Lessons plugin
+     */
+    public static function activate()
+    {
+        $instance = self::getInstance();
+        $instance->post_types();
+        flush_rewrite_rules();
+    }
+
+    /**
+     * Initialize Lessons Admin
+     * @return bool
+     */
+    private function initAdmin()
+    {
+        if (!is_admin()) return false;
         $this->metaboxes();
         $this->admin_post_list();
+    }
+
+    /**
+     * Initialize Lessons Shared resources
+     */
+    private function initShared()
+    {
+        $this->post_types();
+    }
+
+    /**
+     * Initialize Lessons custom page templates
+     */
+    private function initTemplates()
+    {
+        // Set Custom page templates
+        $this->plugin->setPageTemplates([
+            'single-' . $this->getPrefix('lesson') . '-full_width.php' => $this->__('Single Lesson Full Width'),
+            'single-' . $this->getPrefix('lesson') . '-sidebar_left.php' => $this->__('Single Lesson Left Sidebar'),
+            'single-' . $this->getPrefix('lesson') . '-sidebar_right.php' => $this->__('Single Lesson Right Sidebar')
+        ]);
+
+        // Display Custom page templates in WP Admin Post screen
+        $this->plugin->initPostTemplates($this->getPrefix('lesson'));
+    }
+
+    /**
+     * Initialize Lessons sidebars
+     */
+    private function initSidebars()
+    {
+        add_action('widgets_init', function()
+        {
+            register_sidebar([
+                'name'          => $this->__( 'Single Lesson Sidebar' ),
+                'id'            => 'single-lesson-sidebar',
+                'description'   => $this->__('Sidebar or Widget Area used on the single Lesson pages'),
+                'before_widget' => '<div id="%1$s" class="widget %2$s">',
+                'after_widget'  => '</div><hr/>',
+                'before_title'  => '<h4 class="widgettitle">',
+                'after_title'   => '</h4>',
+            ]);
+
+            register_sidebar([
+                'name'          => $this->__( 'Single Lesson Content' ),
+                'id'            => 'single-lesson-content',
+                'description'   => $this->__('Widget Area used on the single Lesson page for displaying widgets within the context of the lesson content.'),
+                'before_widget' => '<div id="%1$s" class="widget %2$s">',
+                'after_widget'  => '</div><hr/>',
+                'before_title'  => '<h4 class="widgettitle">',
+                'after_title'   => '</h4>',
+            ]);
+        });
     }
 
     /**

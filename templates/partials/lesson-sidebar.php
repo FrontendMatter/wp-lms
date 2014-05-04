@@ -1,4 +1,5 @@
 <?php
+use Mosaicpro\Alert\Alert;
 use Mosaicpro\WP\Plugins\LMS\Courses;
 $courses = Courses::getInstance();
 ?>
@@ -9,22 +10,9 @@ $courses = Courses::getInstance();
 
 <?php else : ?>
 
-    <?php the_widget(
-        'Mosaicpro\WP\Plugins\LMS\Instructor_Widget',
-        ['before_title' => '<h4 class="widgettitle">', 'after_title' => '</h4>']
-    ); ?>
-    <hr/>
-
-    <?php the_widget(
-        'Mosaicpro\WP\Plugins\LMS\Course_Information_Widget',
-        ['before_title' => '<h4 class="widgettitle">', 'after_title' => '</h4>']
-    ); ?>
-    <hr/>
-
-    <?php the_widget(
-        'Mosaicpro\WP\Plugins\LMS\Download_Attachments_Widget',
-        ['before_title' => '<h4 class="widgettitle">', 'after_title' => '</h4>']
-    ); ?>
-    <hr/>
+    <?php Alert::make()
+        ->addAlert($courses->__('No widgets added to this sidebar yet. You can do so from the WP Admin Appearance menu, Widgets section or from the Theme Customizer.'))
+        ->isInfo();
+    ?>
 
 <?php endif; ?>

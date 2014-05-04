@@ -1,5 +1,6 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
+use Mosaicpro\Alert\Alert;
 use Mosaicpro\Media\Media;
 use WP_Query;
 use WP_Widget;
@@ -44,28 +45,29 @@ class Instructor_Widget extends WP_Widget
     public function form($instance)
     {
         extract($instance);
+        $courses = Courses::getInstance();
         if (!isset($display_author_courses)) $display_author_courses = 0;
         if (!isset($author_courses_limit)) $author_courses_limit = 3;
         ?>
         <p>
-            <label for="<?php echo $this->get_field_id('author_id'); ?>">Author username or ID: </label><br/>
+            <label for="<?php echo $this->get_field_id('author_id'); ?>"><?php echo $courses->__('Author username or ID'); ?>: </label><br/>
             <input type="text"
                    class="widefat"
                    id="<?php echo $this->get_field_id('author_id'); ?>"
                    name="<?php echo $this->get_field_name('author_id'); ?>"
                    value="<?php if (isset($author_id)) echo esc_attr($author_id); ?>"
-                   placeholder="<?php echo __('Defaults to current post author'); ?>" />
+                   placeholder="<?php echo $courses->__('Defaults to current post author'); ?>" />
         </p>
         <p>
             <label for="<?php echo $this->get_field_id('display_author_courses'); ?>">
                 <input type="checkbox"
                        id="<?php echo $this->get_field_id('display_author_courses'); ?>"
                        name="<?php echo $this->get_field_name('display_author_courses'); ?>"
-                       value="1"<?php checked(1, $display_author_courses); ?> /> Display Author Courses
+                       value="1"<?php checked(1, $display_author_courses); ?> /> <?php echo $courses->__('Display Author Courses'); ?>
             </label>
         </p>
         <p>
-            <label for="<?php echo $this->get_field_id('author_courses_limit'); ?>">Author courses limit: </label>
+            <label for="<?php echo $this->get_field_id('author_courses_limit'); ?>"><?php echo $courses->__('Author courses limit'); ?>: </label>
             <input type="text"
                    class="widefat"
                    style="width: 50px"
@@ -94,9 +96,22 @@ class Instructor_Widget extends WP_Widget
 
         echo $before_widget;
 
+        $post = get_post();
+        if (!$author_id) $author_id = $post->post_author;
+        $author_valid = is_numeric($author_id) ? get_user_by('id', $author_id) : get_user_by('login', $author_id);
+
+        if (!$author_valid)
+        {
+            echo Alert::make()->addAlert($courses->__('Invalid author'))->isInfo();
+            return;
+        }
+
+        $author_name = $author_id;
+        if (is_numeric($author_id)) $author_name = get_the_author_meta('user_nicename', $author_id);
+
         echo Media::make()
-            ->addObjectLeft(get_avatar( get_the_author(), 64 ))
-            ->addBody($title, get_the_author());
+            ->addObjectLeft(get_avatar( $author_id, 64 ))
+            ->addBody($title, $author_name);
 
         if ($display_author_courses)
         {
@@ -105,8 +120,6 @@ class Instructor_Widget extends WP_Widget
                 'posts_per_page' => $author_courses_limit
             ];
 
-            $post = get_post();
-            if (!$author_id) $author_id = $post->post_author;
             if (is_numeric($author_id)) $author_courses_args['author'] = $author_id;
             else $author_courses_args['author_name'] = $author_id;
 
@@ -117,7 +130,7 @@ class Instructor_Widget extends WP_Widget
             if ( $author_courses->have_posts() ):
             ?>
                 <hr/>
-                <h4><?php echo sprintf( $courses->__('Other courses by %1$s'), get_the_author() ); ?></h4>
+                <h4><?php echo sprintf( $courses->__('Other courses by %1$s'), $author_name ); ?></h4>
                 <div class="owl-carousel owl-theme owl-carousel-single">
 
                     <?php while ( $author_courses->have_posts() ): ?>
