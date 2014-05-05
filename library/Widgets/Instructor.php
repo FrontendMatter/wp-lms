@@ -130,7 +130,7 @@ class Instructor_Widget extends WP_Widget
             if ( $author_courses->have_posts() ):
             ?>
                 <hr/>
-                <h4><?php echo sprintf( $courses->__('Other courses by %1$s'), $author_name ); ?></h4>
+                <h4><?php echo sprintf( $courses->__('Courses by %1$s'), $author_name ); ?></h4>
                 <div class="owl-carousel owl-theme owl-carousel-single">
 
                     <?php while ( $author_courses->have_posts() ): ?>

@@ -6,12 +6,11 @@ $courses = Courses::getInstance();
 
 <h1><?php the_title(); ?></h1>
 
-<?php echo get_the_term_list( get_the_ID(), 'topic', $courses->__('Topics') . ': ', ', ', '' ); ?>
+<p><?php echo get_the_term_list( get_the_ID(), 'topic', $courses->__('Topics') . ': ', ', ', '' ); ?></p>
 
 <?php
-echo Media::make()
-    ->addObjectLeft(get_the_post_thumbnail())
-    ->addBody(null, get_the_content());
+echo apply_filters( 'the_content', get_the_post_thumbnail(null, [125]) .
+    do_shortcode(get_the_content()));
 ?>
 
 <hr/>
