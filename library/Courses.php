@@ -10,7 +10,6 @@ use Mosaicpro\WpCore\PostList;
 use Mosaicpro\WpCore\PostType;
 use Mosaicpro\WpCore\Taxonomy;
 use Mosaicpro\WpCore\ThickBox;
-use Mosaicpro\WpCore\Utility;
 use WP_Query;
 
 /**
@@ -172,97 +171,12 @@ class Courses extends PluginGeneric
      */
     private function initShortcodes()
     {
-        if (is_admin())
-        {
-            add_action('save_post', function($id)
-            {
-                $post_content = isset($_POST['post_content']) ? $_POST['post_content'] : false;
-                if (!$post_content) return false;
-
-                if (stripos($post_content, '[register_sidebar') === false)
-                    return false;
-
-                // reset sidebars
-                // delete_option('mp_sidebars');
-
-                preg_replace_callback("/\[register_sidebar ([^\[]*)/s", function($m) use ($id)
-                {
-                    $attr = substr($m[1], 0, -1);
-                    $attr = stripslashes($attr);
-                    $sidebar = shortcode_parse_atts( $attr );
-
-                    if (!isset($sidebar['id'])) return false;
-
-                    // make sure sidebar id is unique
-                    $sidebar_id = 'mp-sidebar-post-' . $id . '-' . $sidebar['id'];
-
-                    // default sidebar name
-                    $sidebar_name = ucwords(str_replace(['-', '_'], ' ', $sidebar_id));
-
-                    // custom sidebar name
-                    if (isset($sidebar['name'])) $sidebar_name = $sidebar['name'];
-                    if (is_numeric($sidebar_name)) $sidebar_name = 'Sidebar ' . $sidebar_name;
-                    $sidebar_name = '(Post ' . $id . ') ' . $sidebar_name;
-
-                    // get existing sidebars
-                    $sidebars = get_option('mp_sidebars', []);
-
-                    // not a dupe
-                    $dupe = array_where($sidebars, function($key, $value) use ($sidebar_id)
-                    {
-                        return $value['id'] == $sidebar_id;
-                    });
-
-                    if (count($dupe) == 0)
-                    {
-                        // add sidebar
-                        $sidebars[] = ['id' => $sidebar_id, 'name' => $sidebar_name];
-                    }
-                    else
-                    {
-                        // update sidebar name
-                        foreach($sidebars as $k => $sb)
-                        {
-                            if ($sb['id'] == $sidebar_id)
-                            {
-                                $sidebars[$k]['name'] = $sidebar_name;
-                                break;
-                            }
-                        }
-                    }
-
-                    update_option('mp_sidebars', $sidebars);
-                },
-                $post_content);
-            });
-        }
-
-        add_action('widgets_init', function()
-        {
-            $sidebars = get_option('mp_sidebars', []);
-            foreach($sidebars as $sidebar)
-            {
-                register_sidebar([
-                    'id'            => $sidebar['id'],
-                    'name'          => $sidebar['name'],
-                    'description'   => __('Widget area created dynamically.'),
-                    'before_widget' => '<div id="%1$s" class="widget %2$s">',
-                    'after_widget'  => '</div>',
-                    'before_title'  => '<h4 class="widgettitle">',
-                    'after_title'   => '</h4>',
-                ]);
-            }
-        });
-
         add_action('init', function()
         {
             $shortcodes = [
                 'Course_Information',
                 'Curriculum',
-                'Instructor',
-                'Grid_Row',
-                'Grid_Column',
-                'Register_Sidebar'
+                'Instructor'
             ];
 
             foreach ($shortcodes as $sc)
