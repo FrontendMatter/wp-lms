@@ -1,6 +1,6 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
-use Mosaicpro\ListGroup\ListGroup;
+use Mosaicpro\HtmlGenerators\ListGroup\ListGroup;
 use Mosaicpro\WP\Plugins\Quiz\QuizResults;
 use Mosaicpro\WpCore\Date;
 use WP_Widget;

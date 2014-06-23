@@ -1,6 +1,5 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
-use Mosaicpro\WpCore\CRUD;
 use Mosaicpro\WpCore\Date;
 use Mosaicpro\WpCore\MetaBox;
 use Mosaicpro\WpCore\PluginGeneric;

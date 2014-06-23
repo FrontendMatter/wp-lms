@@ -1,7 +1,7 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
-use Mosaicpro\Alert\Alert;
-use Mosaicpro\Media\Media;
+use Mosaicpro\HtmlGenerators\Alert\Alert;
+use Mosaicpro\HtmlGenerators\Media\Media;
 use WP_Query;
 use WP_Widget;
 

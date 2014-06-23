@@ -1,9 +1,9 @@
 <?php namespace Mosaicpro\WP\Plugins\LMS;
 
-use Mosaicpro\Core\IoC;
-use Mosaicpro\Grid\Grid;
-use Mosaicpro\Nav\Nav;
-use Mosaicpro\Tab\Tab;
+use Mosaicpro\HtmlGenerators\Core\IoC;
+use Mosaicpro\HtmlGenerators\Grid\Grid;
+use Mosaicpro\HtmlGenerators\Nav\Nav;
+use Mosaicpro\HtmlGenerators\Tab\Tab;
 use Mosaicpro\WpCore\CRUD;
 use Mosaicpro\WpCore\FormBuilder;
 use Mosaicpro\WpCore\MetaBox;
