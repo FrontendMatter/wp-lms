@@ -1,6 +1,6 @@
 <?php
-use Mosaicpro\Alert\Alert;
-use Mosaicpro\Button\Button;
+use Mosaicpro\HtmlGenerators\Alert\Alert;
+use Mosaicpro\HtmlGenerators\Button\Button;
 use Mosaicpro\WP\Plugins\LMS\Courses;
 
 $courses = Courses::getInstance();

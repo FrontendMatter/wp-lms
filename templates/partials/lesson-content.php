@@ -1,5 +1,5 @@
 <?php
-use Mosaicpro\Media\Media;
+use Mosaicpro\HtmlGenerators\Media\Media;
 use Mosaicpro\WP\Plugins\LMS\Courses;
 $courses = Courses::getInstance();
 ?>

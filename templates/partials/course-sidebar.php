@@ -1,5 +1,5 @@
 <?php
-use Mosaicpro\Alert\Alert;
+use Mosaicpro\HtmlGenerators\Alert\Alert;
 use Mosaicpro\WP\Plugins\LMS\Courses;
 $courses = Courses::getInstance();
 ?>
