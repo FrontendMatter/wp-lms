@@ -2,6 +2,7 @@
     "name": "mosaicpro/wp-lms",
     "description": "WordPress Learning Management System plugin",
     "type": "wordpress-plugin",
+    "version": "0.1.0",
     "authors": [
         {
             "name": "Laza Bogdan",
@@ -12,6 +13,7 @@
     "require": {
         "php": ">=5.3.0",
         "composer/installers": "~1.0",
-        "mosaicpro/wp-package-test": "dev-master"
+        "mosaicpro/wp-core": "dev-master",
+        "mosaicpro/wp-html-generators": "dev-master"
     }
 }
